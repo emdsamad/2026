@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>sts</title>
+    <title>STS</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a237e">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -4394,7 +4394,7 @@
     // ক্লোজিং ব্যালেন্স (স্টক ছাড়া) = সেই মাসের ওপেনিং + সেই মাসের ডেলিভারি ভ্যালু − পেমেন্ট − কমিশন
     function computeLedgerClosingBalanceForMonth(year, month, _depth) {
         const ob = getLedgerOpeningBalanceForMonth(year, month, _depth);
-        const totalCommission = getLedgerTotalCommission();
+        const totalCommission = getLedgerCommissionForMonth(year, month);
         const deliveries = getDeliveries().filter(d => matchesYearMonth(d.date, year, month));
         const payments = getPayments().filter(p => matchesYearMonth(p.date, year, month));
         const totalValue = deliveries.reduce((s, d) => s + ((d.bags || 0) * (d.price || 0)), 0);
@@ -4418,11 +4418,29 @@
         document.getElementById('ledger-opening-balance-edit').style.display = 'none';
         renderLedgerTable();
     }
-    function getLedgerTotalCommission() { return parseFloat(localStorage.getItem('ledger_total_commission')) || 0; }
+    // ✅ আগে কমিশন ছিল একটাই ফ্ল্যাট গ্লোবাল ভ্যালু (localStorage-এ একটা মাত্র key) — তাই যে মাসেই
+    // একবার কমিশন লেখা হতো, সেটাই সব মাসের কার্ডে (যেমন জুনে লেখা কমিশন জুলাইয়ের কার্ডেও) দেখাতো
+    // এবং প্রতি মাসের closing balance থেকে বারবার বিয়োগ হতো। এখন কমিশন প্রতিটা মাসের জন্য আলাদাভাবে
+    // সেভ হয় (ঠিক ওপেনিং ব্যালেন্সের মতো) — শুধু ব্যালেন্স (ওপেনিং/ক্লোজিং) মাস থেকে মাসে ক্যারি হবে,
+    // কমিশন কখনো এক মাস থেকে আরেক মাসে ক্যারি/রিপিট হবে না।
+    function getLedgerCommissionForMonth(year, month) {
+        const v = localStorage.getItem('ledger_commission_' + year + '_' + month);
+        return v !== null && v !== '' ? (parseFloat(v) || 0) : 0;
+    }
+    function getLedgerTotalCommission() {
+        const f = getActiveFilter();
+        if (f.year && f.month) return getLedgerCommissionForMonth(f.year, f.month);
+        return parseFloat(localStorage.getItem('ledger_total_commission')) || 0; // ফিল্টার না থাকলে পুরনো ফ্ল্যাট ভ্যালু
+    }
     function saveLedgerCommission() {
         const inp = document.getElementById('ledger-commission-input');
         const val = parseFloat(inp.value) || 0;
-        localStorage.setItem('ledger_total_commission', val);
+        const f = getActiveFilter();
+        if (f.year && f.month) {
+            localStorage.setItem('ledger_commission_' + f.year + '_' + f.month, val);
+        } else {
+            localStorage.setItem('ledger_total_commission', val);
+        }
         document.getElementById('ledger-commission-edit').style.display = 'none';
         renderLedgerTable();
     }
