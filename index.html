@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>উল্লাপাড়া ভ্যারাইটি স্টোর - ট্র্যাকিং অ্যাপ</title>
+    <title>sts</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a237e">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -168,13 +168,17 @@
             text-align: center;
         }
         .action-dropdown.profile-dropdown {
-            position: absolute;
-            top: 50%;
-            left: 100%;
-            transform: translateY(-50%);
+            /* ⚠️ আগে position:absolute + left:100% + transform ছিল, যা বাটনটাকে টেক্সটের
+               ডানে অনেক দূরে (কখনো পেজের বাইরে) ঠেলে দিত। আর ancestor-এ transform থাকলে
+               সেটা position:fixed চাইল্ড (পপআপ, নিচের toggleMenu() যা সেট করে)-এর জন্য
+               ভিউপোর্টের বদলে এই এলিমেন্টকেই রেফারেন্স ফ্রেম বানিয়ে ফেলত — ফলে JS-এর
+               অন-স্ক্রিন ক্ল্যাম্প হিসাব সঠিক হলেও পপআপ ভুল জায়গায় (পেজের বাইরে) বসত।
+               এখন এটা normal inline flow-তে টেক্সটের ঠিক পাশে বসে, কোনো transform নেই —
+               তাই position:fixed পপআপ সত্যিকারের ভিউপোর্ট অনুযায়ী সঠিক জায়গায় খোলে। */
+            position: static;
             flex-shrink: 0;
             margin: 0 0 0 2px;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
         }
@@ -1700,9 +1704,9 @@
                     <h4 id="lbl-c1">🎯 সেলস টার্গেট</h4>
                     <p id="dash-target">-</p>
                 </div>
-                <div class="card"><h4 id="lbl-c2">-</h4><p id="dash-total-do">-</p><div id="dash-total-do-location-breakdown" style="font-size:9px;color:#555;margin-top:2px;line-height:1.4;">-</div></div>
-                <div class="card"><h4 id="lbl-c3">-</h4><p id="dash-total-delivery">-</p><div id="dash-total-delivery-location-breakdown" style="font-size:9px;color:#555;margin-top:2px;line-height:1.4;">-</div></div>
-                <div class="card"><h4 id="lbl-c4">-</h4><p id="dash-stock">-</p><div id="dash-stock-location-breakdown" style="font-size:9px;color:#555;margin-top:2px;line-height:1.4;">-</div></div>
+                <div class="card"><h4 id="lbl-c2">-</h4><p id="dash-total-do">-</p></div>
+                <div class="card"><h4 id="lbl-c3">-</h4><p id="dash-total-delivery">-</p></div>
+                <div class="card"><h4 id="lbl-c4">-</h4><p id="dash-stock">-</p></div>
                 <div class="card"><h4 id="lbl-c5">-</h4><p id="dash-achievement">-</p></div>
                 <div class="card"><h4 id="lbl-c6">-</h4><p id="dash-days-left">-</p></div>
             </div>
@@ -3621,30 +3625,14 @@
         menu.style.display = '';
         menu.style.visibility = '';
 
-        let left, top;
+        let left = rect.left - menuW - 6;
+        if (left < 6) left = rect.right + 6;
+        if (left + menuW > window.innerWidth - 6) left = window.innerWidth - menuW - 6;
+        if (left < 6) left = 6;
 
-        // উপরের ব্যানারের নাম/পদবী/টেরিটরি ফিল্ডের থ্রি-ডট মেনু: এই বাটনগুলো কার্ডের ডান
-        // প্রান্তের খুব কাছে থাকায় সাধারণ (বামে/ডানে ফ্লিপ) হিসাব করলে মেনুটা কার্ডের বাইরে
-        // চলে যেত। তাই এটিকে সবসময় বাটনের ঠিক নিচে (বা নিচে জায়গা না থাকলে উপরে) খোলা হয়,
-        // যা কার্ডের সাথেই ভিজ্যুয়ালি লেগে থাকে।
-        if (parentDropdown.classList.contains('profile-dropdown')) {
-            left = rect.right - menuW;
-            if (left < 6) left = 6;
-            if (left + menuW > window.innerWidth - 6) left = window.innerWidth - menuW - 6;
-
-            top = rect.bottom + 4;
-            if (top + menuH > window.innerHeight - 6) top = rect.top - menuH - 4;
-            if (top < 6) top = 6;
-        } else {
-            left = rect.left - menuW - 6;
-            if (left < 6) left = rect.right + 6;
-            if (left + menuW > window.innerWidth - 6) left = window.innerWidth - menuW - 6;
-            if (left < 6) left = 6;
-
-            top = rect.top + (rect.height / 2) - (menuH / 2);
-            if (top < 6) top = 6;
-            if (top + menuH > window.innerHeight - 6) top = window.innerHeight - menuH - 6;
-        }
+        let top = rect.top + (rect.height / 2) - (menuH / 2);
+        if (top < 6) top = 6;
+        if (top + menuH > window.innerHeight - 6) top = window.innerHeight - menuH - 6;
 
         menu.style.left = left + 'px';
         menu.style.top = top + 'px';
@@ -4647,7 +4635,11 @@
         }
         const cbEl = document.getElementById('ledger-closing-balance');
         if (cbEl) {
-            cbEl.innerText = (currentLang === 'bn' ? '(ক্লোজিং ব্যালেন্স: ' : '(Closing Balance: ') + formatLangCurrency(runningBalance) + ')';
+            // ✅ ক্লোজিং ব্যালেন্স = ওপেনিং − কমিশন + মোট মূল্য − ফিল্টারে বাছাই করা মাসের সম্পূর্ণ মোট পেমেন্ট
+            // (উপরের রো-লুপে পেমেন্ট শুধু তারিখ-মিল থাকলেই বিয়োগ হয়, তাই এখানে totalPayment ব্যবহার করে
+            //  পুরো মাসের সব পেমেন্ট নিশ্চিতভাবে বাদ দেওয়া হচ্ছে, ডেলিভারির তারিখের সাথে মিলুক বা না মিলুক)
+            const closingBalance = (openingBalance - totalCommission) + totalValue - totalPayment;
+            cbEl.innerText = (currentLang === 'bn' ? '(ক্লোজিং ব্যালেন্স: ' : '(Closing Balance: ') + formatLangCurrency(closingBalance) + ')';
         }
         // আউটস্ট্যান্ডিং ব্যালেন্স = ওপেনিং ব্যালেন্স + এই মাসের মোট মূল্য - পেমেন্ট - কমিশন + বর্তমান স্টক ভ্যালু
         const outEl = document.getElementById('ledger-outstanding-balance');
@@ -8888,10 +8880,6 @@ ${territory}`;
         let totalDOBags = 0;
         let totalDOValue = 0;
         let filteredStockBags = 0;
-        // ফিল্টার করা মাসের DO অনুযায়ী লাইভ স্টক ঘাট/ফ্যাক্টরি ভিত্তিতে ভাগ করা (dash-stock কার্ডের নিচে দেখানোর জন্য)
-        const stockByLocation = { Factory: 0, Ghat: 0 };
-        // মোট DO-এর পরিমাণ ঘাট/ফ্যাক্টরি ভিত্তিতে ভাগ করা (dash-total-do কার্ডের নিচে দেখানোর জন্য)
-        const doByLocation = { Factory: 0, Ghat: 0 };
 
         filteredDos.forEach(d => {
             const deliveredFromThisDO = allDeliveries.filter(del => del.doNum === d.doNum).reduce((sum, del) => sum + del.bags, 0);
@@ -8914,7 +8902,6 @@ ${territory}`;
             }
             totalDOBags += isCarryDO ? carriedInAmount : d.bags;
             totalDOValue += (isCarryDO ? carriedInAmount : d.bags) * d.unitPrice;
-            doByLocation[d.location === 'Factory' ? 'Factory' : 'Ghat'] += isCarryDO ? carriedInAmount : d.bags;
 
             const opt = document.createElement('option');
             opt.value = d.doNum;
@@ -8934,7 +8921,6 @@ ${territory}`;
             const displayValue = totalBagDisplay * d.unitPrice;
             // "মোট স্টক" ব্যাজ = এই টেবিলে দেখানো সব DO-এর লাইভ অবশিষ্ট মজুদের যোগফল
             filteredStockBags += stockDoDisplay;
-            stockByLocation[d.location === 'Factory' ? 'Factory' : 'Ghat'] += stockDoDisplay;
             const carryBadge = isCarryDO ? ' <span style="font-size:10px;background:#ff8f00;color:#fff;padding:1px 5px;border-radius:8px;">↩ Carry</span>' : '';
             const rowStyle = isCarryDO ? ' style="background:#fff8e1;"' : '';
             const stockColor = stockDoDisplay <= 0 ? '#c62828' : '#2e7d32';
@@ -9112,13 +9098,10 @@ ${territory}`;
         delTable.innerHTML = '';
         let totalDeliveredBags = 0;
         let totalSalesValue = 0;
-        // মোট ডেলিভারির পরিমাণ ঘাট/ফ্যাক্টরি ভিত্তিতে ভাগ করা (dash-total-delivery কার্ডের নিচে দেখানোর জন্য)
-        const deliveredByLocation = { Factory: 0, Ghat: 0 };
 
         deliveries.forEach(del => {
             totalDeliveredBags += del.bags;
             totalSalesValue += (del.bags * del.price);
-            deliveredByLocation[del.point === 'Ghat' ? 'Ghat' : 'Factory'] += del.bags;
             let displayDelType = del.type === 'PCC' ? (currentLang === 'bn' ? 'PCC (পিসিসি)' : 'PCC') : (currentLang === 'bn' ? 'OPC (ওপিসিসি)' : 'OPC');
             let customerTypePrefix = del.saleType === "Counter" ? "🏪 " : "👥 ";
             let displayLoc = del.point === 'Ghat' ? (currentLang === 'bn' ? '⚓ ঘাট' : '⚓ Ghat') : (currentLang === 'bn' ? '🏭 ফ্যাক্টরি' : '🏭 Factory');
@@ -9177,29 +9160,8 @@ ${territory}`;
         renderDashUnitSwitch();
         document.getElementById('dash-target').innerText = bagsOrTon(targetBags, dashUnit);
         document.getElementById('dash-total-do').innerText = bagsOrTon(totalDOBags, dashUnit);
-        const dashDoLocEl = document.getElementById('dash-total-do-location-breakdown');
-        if (dashDoLocEl) {
-            dashDoLocEl.innerText =
-                (currentLang === 'bn' ? '🏭 ফ্যাক্টরি: ' : '🏭 Factory: ') + bagsOrTon(doByLocation.Factory, dashUnit) +
-                ' | ' +
-                (currentLang === 'bn' ? '⚓ ঘাট: ' : '⚓ Ghat: ') + bagsOrTon(doByLocation.Ghat, dashUnit);
-        }
         document.getElementById('dash-total-delivery').innerText = bagsOrTon(totalDeliveredBags, dashUnit);
-        const dashDelLocEl = document.getElementById('dash-total-delivery-location-breakdown');
-        if (dashDelLocEl) {
-            dashDelLocEl.innerText =
-                (currentLang === 'bn' ? '🏭 ফ্যাক্টরি: ' : '🏭 Factory: ') + bagsOrTon(deliveredByLocation.Factory, dashUnit) +
-                ' | ' +
-                (currentLang === 'bn' ? '⚓ ঘাট: ' : '⚓ Ghat: ') + bagsOrTon(deliveredByLocation.Ghat, dashUnit);
-        }
         document.getElementById('dash-stock').innerText = bagsOrTon(currentStockBags, dashUnit);
-        const dashStockLocEl = document.getElementById('dash-stock-location-breakdown');
-        if (dashStockLocEl) {
-            dashStockLocEl.innerText =
-                (currentLang === 'bn' ? '🏭 ফ্যাক্টরি: ' : '🏭 Factory: ') + bagsOrTon(stockByLocation.Factory, dashUnit) +
-                ' | ' +
-                (currentLang === 'bn' ? '⚓ ঘাট: ' : '⚓ Ghat: ') + bagsOrTon(stockByLocation.Ghat, dashUnit);
-        }
         document.getElementById('dash-achievement').innerText = convertToLangNum(targetBags > 0 ? Math.round((totalDeliveredBags / targetBags) * 100) : 0) + '%';
         document.getElementById('dash-days-left').innerText = convertToLangNum(daysLeft) + data.suffixDays;
 
