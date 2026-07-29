@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STS</title>
+    <title>উল্লাপাড়া ভ্যারাইটি স্টোর - ট্র্যাকিং অ্যাপ</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a237e">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -2046,6 +2046,7 @@
 
                 <div class="form-card" id="payment-form-section" style="display: none; border: 1px solid #2e7d32; background: #fafafa;">
                     <h3 id="lan-pay-form-title">💰 নতুন কালেকশন / পেমেন্ট জমা করুন</h3>
+                    <div class="form-group"><label id="lbl-p-f0">🏬 ডিলার:</label><select id="pay-dealer" class="form-dealer-select"></select></div>
                     <div class="form-group"><label id="lbl-p-f1">তারিখ:</label><input type="date" id="pay-date"></div>
                     <div class="form-group"><label id="lbl-p-f2">কালেকশন বা জমার পরিমাণ (টাকা):</label><input type="number" id="pay-amount" placeholder="যেমন: 50000"></div>
                     <div class="form-group"><label id="lbl-p-f3">পেমেন্ট মাধ্যম:</label>
@@ -2090,6 +2091,7 @@
 
                 <div class="form-card" id="do-form-section" style="display: none; border: 1px solid #e65100; background: #fafafa;">
                     <h3 id="lan-do-form-title">📦 নতুন ডিও (DO) যুক্ত করুন</h3>
+                    <div class="form-group"><label id="lbl-d-f0">🏬 ডিলার:</label><select id="do-dealer" class="form-dealer-select"></select></div>
                     <div class="form-group"><label id="lbl-d-f1">তারিখ:</label><input type="date" id="do-date"></div>
                     <div class="form-group"><label id="lbl-d-f2">ইউনিক ডিও নাম্বার (DO No):</label><input type="text" id="do-number" placeholder="কোম্পানির ডিও নাম্বার দিন"></div>
                     <div class="form-group"><label id="lbl-d-f3">মোট ব্যাগ সংখ্যা:</label><input type="number" id="do-bags" placeholder="যেমন: 5000"></div>
@@ -2362,6 +2364,7 @@
 
                 <div class="form-card" id="retailer-form-section" style="display: none; border: 1px solid #2e7d32; background: #fafafa;">
                     <h3>👥 <span id="lan-ret-form-title">নতুন রিটেইলার যুক্ত করুন</span></h3>
+                    <div class="form-group"><label id="lbl-r-f0">🏬 ডিলার:</label><select id="retailer-dealer" class="form-dealer-select"></select></div>
                     <div class="form-group"><label id="lbl-r-f1">রিটেইলার/দোকানের নাম:</label><input type="text" id="retailer-name" placeholder="যেমন: মেসার্স রহমান ট্রেডার্স"></div>
                     <div class="form-group"><label id="lbl-r-f2">ঠিকানা (ঐচ্ছিক):</label><input type="text" id="retailer-address" placeholder="যেমন: উল্লেখ করুন"></div>
                     <div class="form-group"><label id="lbl-r-f3">মোবাইল নম্বর (ঐচ্ছিক):</label><input type="text" id="retailer-phone" placeholder="যেমন: 017XXXXXXXX"></div>
@@ -2519,6 +2522,7 @@
 
                 <div class="form-card" id="mason-form-section" style="display: none; border: 1px solid #2e7d32; background: #fafafa;">
                     <h3>🧱 <span id="lan-mason-form-title">নতুন কন্ট্রাক্টর যুক্ত করুন</span></h3>
+                    <div class="form-group"><label>🏬 ডিলার:</label><select id="mason-dealer" class="form-dealer-select"></select></div>
                     <div class="form-group"><label id="lbl-ms-f0">CRM ID:</label><input type="text" id="mason-crm-id" placeholder="যেমন: CRM-102"></div>
                     <div class="form-group"><label id="lbl-ms-f1">নাম:</label><input type="text" id="mason-name" placeholder="যেমন: করিম মিস্ত্রি"></div>
                     <div class="form-group"><label id="lbl-ms-f2">ঠিকানা:</label><input type="text" id="mason-address" placeholder="যেমন: উল্লাপাড়া সদর"></div>
@@ -2550,6 +2554,7 @@
 
                 <div class="form-card" id="mason-loyalty-form-section" style="display: none; border: 1px solid #2e7d32; background: #fafafa;">
                     <h3>🧱 <span id="lan-mason-loyalty-form-title">নতুন User Order যুক্ত করুন</span></h3>
+                    <div class="form-group"><label>🏬 ডিলার:</label><select id="loy-dealer" class="form-dealer-select"></select></div>
                     <div class="form-group"><label>Date (তারিখ):</label><input type="date" id="loy-date"></div>
                     <div class="form-group"><label id="lbl-loy-name">Name (নাম):</label><input type="text" id="loy-name" placeholder="মিস্ত্রির নাম"></div>
                     <div class="form-group"><label id="lbl-loy-mobile">Mobile (মোবাইল):</label><input type="tel" id="loy-mobile" placeholder="যেমন: 017xxxxxxxx"></div>
@@ -2619,6 +2624,7 @@
 
             <div class="form-card" id="engineer-form-section" style="display: none; border: 1px solid #2e7d32; background: #fafafa;">
                 <h3>👷 <span id="lan-engineer-form-title">নতুন Engineer যুক্ত করুন</span></h3>
+                <div class="form-group"><label>🏬 ডিলার:</label><select id="engineer-dealer" class="form-dealer-select"></select></div>
                 <div class="form-group"><label id="lbl-eng-f1">Engineer-এর নাম:</label><input type="text" id="engineer-name" placeholder="যেমন: মো. রফিকুল ইসলাম"></div>
                 <div class="form-group"><label id="lbl-eng-f2">ঠিকানা:</label><input type="text" id="engineer-address" placeholder="যেমন: উল্লাপাড়া সদর"></div>
                 <div class="form-group"><label id="lbl-eng-f3">ফোন নম্বর:</label><input type="tel" id="engineer-phone" placeholder="যেমন: ০১৭XXXXXXXX"></div>
@@ -2656,6 +2662,7 @@
 
             <div class="form-card" id="ihb-form-section" style="display: none; border: 1px solid #e91e63; background: #fafafa;">
                 <h3>🏠 <span id="lan-ihb-form-title">নতুন IHB যুক্ত করুন</span></h3>
+                <div class="form-group"><label>🏬 ডিলার:</label><select id="ihb-dealer" class="form-dealer-select"></select></div>
                 <div class="form-group"><label id="lbl-ihb-crm">CRM ID:</label><input type="text" id="ihb-crm-id" placeholder="যেমন: CRM-101"></div>
                 <div class="form-group"><label id="lbl-ihb-f1">IHB Name (বিল্ডারের নাম):</label><input type="text" id="ihb-name" placeholder="যেমন: মো. আসলাম হোসেন"></div>
                 <div class="form-group"><label id="lbl-ihb-f2">Address (ঠিকানা):</label><input type="text" id="ihb-address" placeholder="যেমন: উল্লাপাড়া সদর"></div>
@@ -2796,6 +2803,7 @@
 
                 <div class="form-card" id="delivery-form-section" style="display: none; border: 1px solid #2e7d32; background: #fafafa;">
                     <h3 id="lan-del-form-title">🚚 নতুন ডেলিভারি চালান এন্ট্রি</h3>
+                    <div class="form-group"><label>🏬 ডিলার:</label><select id="del-dealer" class="form-dealer-select"></select></div>
                     <div class="form-group"><label id="lbl-de-f1">ডেলিভারি তারিখ:</label><input type="date" id="del-date"></div>
                     <div class="form-group"><label id="lbl-de-f2">ডিও নাম্বার সিলেক্ট করুন:</label>
                         <input type="text" id="del-do-select" readonly placeholder="👆 ক্লিক করে ডিও বাছুন"
@@ -2939,6 +2947,7 @@
 
                 <div class="form-card" id="truck-form-section" style="display: none; border: 1px solid #1a237e; background: #fafafa;">
                     <h3 id="lan-truck-form-title">🚛 Truck Jukto Korun</h3>
+                    <div class="form-group"><label>🏬 ডিলার:</label><select id="truck-dealer" class="form-dealer-select"></select></div>
                     <div class="form-group"><label id="lbl-tr-f1">Truck Number:</label><input type="text" id="truck-number" placeholder="যেমন: ঢাকা মেট্রো-ট-১১-২২২২"></div>
                     <div class="form-group"><label id="lbl-tr-f2">Driver Name:</label><input type="text" id="truck-driver-name" placeholder="যেমন: করিম উদ্দিন"></div>
                     <div class="form-group"><label id="lbl-tr-f3">Driver Contact:</label><input type="text" id="truck-driver-contact" placeholder="যেমন: ০১৭XXXXXXXX"></div>
@@ -5165,10 +5174,11 @@
         const totalAmount = qty * price;
         const totalDue = totalAmount - paid - commission;
 
+        const dealerName = document.getElementById('spd-dealer') ? document.getElementById('spd-dealer').value : '';
         const entries = getRetailerSPEntries();
         entries.push({
             id: Date.now(), retailerId: r.id, retailerName: r.name,
-            date, memo, qty, price, totalAmount, paid, commission, totalDue, remarks
+            date, memo, qty, price, totalAmount, paid, commission, totalDue, remarks, dealerName
         });
         localStorage.setItem('retailer_sp_entries', JSON.stringify(entries));
 
@@ -5192,7 +5202,8 @@
             { label: currentLang === 'bn' ? 'মূল্য' : 'Price', id: 'e_spd_price', type: 'number', val: e.price || 0 },
             { label: currentLang === 'bn' ? 'জমা' : 'Deposit', id: 'e_spd_paid', type: 'number', val: e.paid || 0 },
             { label: currentLang === 'bn' ? 'কমিশন' : 'Commission', id: 'e_spd_commission', type: 'number', val: e.commission || 0 },
-            { label: currentLang === 'bn' ? 'মন্তব্য' : 'Remarks', id: 'e_spd_remarks', type: 'text', val: e.remarks || '' }
+            { label: currentLang === 'bn' ? 'মন্তব্য' : 'Remarks', id: 'e_spd_remarks', type: 'text', val: e.remarks || '' },
+            editDealerField(e.dealerName)
         ], function(vals) {
             const qty = parseFloat(vals.e_spd_qty) || 0;
             const price = parseFloat(vals.e_spd_price) || 0;
@@ -5201,7 +5212,7 @@
             const totalAmount = qty * price;
             const totalDue = totalAmount - paid - commission;
             const updated = entries.map(x => x.id === id ? Object.assign({}, x, {
-                date: vals.e_spd_date, memo: vals.e_spd_memo, qty, price, totalAmount, paid, commission, totalDue, remarks: vals.e_spd_remarks
+                date: vals.e_spd_date, memo: vals.e_spd_memo, qty, price, totalAmount, paid, commission, totalDue, remarks: vals.e_spd_remarks, dealerName: vals['edit-dealer-select']
             }) : x);
             localStorage.setItem('retailer_sp_entries', JSON.stringify(updated));
             renderRetailerSPDetailTable();
@@ -5410,7 +5421,8 @@
             alert(currentLang === 'bn' ? 'এই ট্রাক নম্বারটি ইতিমধ্যে আছে!' : 'This truck number already exists!');
             return;
         }
-        trucks.push({ id: Date.now(), truckNumber, driverName, driverContact, location });
+        const dealerName = document.getElementById('truck-dealer') ? document.getElementById('truck-dealer').value : '';
+        trucks.push({ id: Date.now(), truckNumber, driverName, driverContact, location, dealerName });
         localStorage.setItem('trucks', JSON.stringify(trucks));
         document.getElementById('truck-number').value = '';
         document.getElementById('truck-driver-name').value = '';
@@ -5443,10 +5455,11 @@
             { label:'মোবাইল', id:'e_driverContact', type:'text', val: t.driverContact },
             { label:'অবস্থান', id:'e_location', type:'select', val: t.location || 'Ghat', options: [
                 { v:'Ghat', l:'ঘাট (Ghat)' }, { v:'Factory', l:'ফ্যাক্টরি (Factory)' }
-            ] }
+            ] },
+            editDealerField(t.dealerName)
         ], function(vals) {
             const updated = trucks.map(x => x.id === id ? Object.assign({}, x, {
-                truckNumber: vals.e_truckNumber, driverName: vals.e_driverName, driverContact: vals.e_driverContact, location: vals.e_location
+                truckNumber: vals.e_truckNumber, driverName: vals.e_driverName, driverContact: vals.e_driverContact, location: vals.e_location, dealerName: vals['edit-dealer-select']
             }) : x);
             localStorage.setItem('trucks', JSON.stringify(updated));
             updateApp();
@@ -5464,7 +5477,8 @@
         if(!date || !doNum || isNaN(bags) || isNaN(unitPrice)) { alert(currentLang === 'bn'?'সবগুলো ফিল্ড পূরণ করুন!':'Fill all fields!'); return; }
         const dos = getDOs();
         if(dos.some(d => d.doNum === doNum)) { alert(currentLang === 'bn'?'এই ডিও নাম্বারটি ইতিমধ্যে আছে!':'DO already exists!'); return; }
-        dos.push({ id: Date.now(), date, doNum, bags, unitPrice, location, type, payment });
+        const dealerName = document.getElementById('do-dealer') ? document.getElementById('do-dealer').value : '';
+        dos.push({ id: Date.now(), date, doNum, bags, unitPrice, location, type, payment, dealerName });
         dos.sort((a,b) => (a.date||'') < (b.date||'') ? -1 : (a.date||'') > (b.date||'') ? 1 : 0);
         localStorage.setItem('dos', JSON.stringify(dos));
         document.getElementById('do-number').value = '';
@@ -5498,12 +5512,13 @@
             { label:'ইউনিট মূল্য', id:'e_unitPrice', type:'number', val: d.unitPrice },
             { label:'লোকেশন', id:'e_location', type:'select', val: d.location, options:[{v:'Factory',l:'Factory'},{v:'Ghat',l:'Ghat'}] },
             { label:'ধরন', id:'e_type', type:'select', val: d.type, options:[{v:'PCC',l:'PCC'},{v:'OPC',l:'OPC'}] },
-            { label:'পেমেন্ট (টাকা)', id:'e_payment', type:'number', val: d.payment||0 }
+            { label:'পেমেন্ট (টাকা)', id:'e_payment', type:'number', val: d.payment||0 },
+            editDealerField(d.dealerName)
         ], function(vals) {
             const updated = dos.map(x => x.id === id ? Object.assign({}, x, {
                 date: vals.e_date, doNum: vals.e_doNum,
                 bags: parseInt(vals.e_bags)||0, unitPrice: parseFloat(vals.e_unitPrice)||0,
-                location: vals.e_location, type: vals.e_type, payment: parseFloat(vals.e_payment)||0
+                location: vals.e_location, type: vals.e_type, payment: parseFloat(vals.e_payment)||0, dealerName: vals['edit-dealer-select']
             }) : x);
             updated.sort((a,b) => (a.date||'') < (b.date||'') ? -1 : (a.date||'') > (b.date||'') ? 1 : 0);
             localStorage.setItem('dos', JSON.stringify(updated));
@@ -5516,9 +5531,10 @@
         const amount = parseFloat(document.getElementById('pay-amount').value);
         const method = document.getElementById('pay-method').value;
         const note = document.getElementById('pay-note').value.trim();
+        const dealerName = document.getElementById('pay-dealer') ? document.getElementById('pay-dealer').value : '';
         if(!date || isNaN(amount)) { alert(currentLang === 'bn'?'সব ফিল্ড পূরণ করুন!':'Fill fields!'); return; }
         const payments = getPayments();
-        payments.push({ id: Date.now(), date, amount, method, note });
+        payments.push({ id: Date.now(), date, amount, method, note, dealerName });
         payments.sort((a,b) => (a.date||'') < (b.date||'') ? -1 : (a.date||'') > (b.date||'') ? 1 : 0);
         localStorage.setItem('payments', JSON.stringify(payments));
         document.getElementById('pay-amount').value = '';
@@ -5547,11 +5563,12 @@
             { label:'তারিখ', id:'e_date', type:'date', val: p.date },
             { label:'পরিমাণ (টাকা)', id:'e_amount', type:'number', val: p.amount },
             { label:'পদ্ধতি', id:'e_method', type:'select', val: p.method, options:[{v:'Cash',l:'Cash'},{v:'Bank',l:'Bank'},{v:'Mobile Banking',l:'Mobile Banking'}] },
-            { label:'নোট', id:'e_note', type:'text', val: p.note||'' }
+            { label:'নোট', id:'e_note', type:'text', val: p.note||'' },
+            editDealerField(p.dealerName)
         ], function(vals) {
             const updated = payments.map(x => x.id === id ? Object.assign({}, x, {
                 date: vals.e_date, amount: parseFloat(vals.e_amount)||0,
-                method: vals.e_method, note: vals.e_note
+                method: vals.e_method, note: vals.e_note, dealerName: vals['edit-dealer-select']
             }) : x);
             updated.sort((a,b) => (a.date||'') < (b.date||'') ? -1 : (a.date||'') > (b.date||'') ? 1 : 0);
             localStorage.setItem('payments', JSON.stringify(updated));
@@ -5566,7 +5583,8 @@
         if(!name) { alert(currentLang === 'bn'?'রিটেইলারের নাম দিন!':'Enter Shop Name!'); return; }
         const retailers = getRetailers();
         if(retailers.some(r => r.name === name)) { alert(currentLang === 'bn'?'এই রিটেইলার অলরেডি আছে!':'Retailer exists!'); return; }
-        retailers.push({ id: Date.now(), name, address, phone });
+        const dealerName = document.getElementById('retailer-dealer') ? document.getElementById('retailer-dealer').value : '';
+        retailers.push({ id: Date.now(), name, address, phone, dealerName });
         localStorage.setItem('retailers', JSON.stringify(retailers));
         document.getElementById('retailer-name').value = '';
         document.getElementById('retailer-address').value = '';
@@ -5594,10 +5612,11 @@
         openEditModal('রিটেইলার এডিট', [
             { label:'নাম', id:'e_name', type:'text', val: r.name },
             { label:'ঠিকানা', id:'e_address', type:'text', val: r.address||'' },
-            { label:'মোবাইল', id:'e_phone', type:'text', val: r.phone||'' }
+            { label:'মোবাইল', id:'e_phone', type:'text', val: r.phone||'' },
+            editDealerField(r.dealerName)
         ], function(vals) {
             const updated = retailers.map(x => x.id === id ? Object.assign({}, x, {
-                name: vals.e_name, address: vals.e_address, phone: vals.e_phone
+                name: vals.e_name, address: vals.e_address, phone: vals.e_phone, dealerName: vals['edit-dealer-select']
             }) : x);
             localStorage.setItem('retailers', JSON.stringify(updated));
             updateApp();
@@ -5614,7 +5633,8 @@
         if(!name) { alert(currentLang === 'bn'?'কন্ট্রাক্টরের নাম দিন!':'Enter Contractor Name!'); return; }
         const masons = getMasons();
         if(masons.some(m => m.name === name)) { alert(currentLang === 'bn'?'এই কন্ট্রাক্টর অলরেডি আছে!':'Contractor already exists!'); return; }
-        masons.push({ id: Date.now(), crmId, name, address, phone, note });
+        const dealerName = document.getElementById('mason-dealer') ? document.getElementById('mason-dealer').value : '';
+        masons.push({ id: Date.now(), crmId, name, address, phone, note, dealerName });
         localStorage.setItem('masons', JSON.stringify(masons));
         
         document.getElementById('mason-crm-id').value = '';
@@ -5647,11 +5667,12 @@
             { label:'নাম', id:'e_name', type:'text', val: m.name },
             { label:'ঠিকানা', id:'e_address', type:'text', val: m.address||'' },
             { label:'মোবাইল', id:'e_phone', type:'text', val: m.phone||'' },
-            { label:'নোট', id:'e_note', type:'text', val: m.note||'' }
+            { label:'নোট', id:'e_note', type:'text', val: m.note||'' },
+            editDealerField(m.dealerName)
         ], function(vals) {
             const updated = masons.map(x => x.id === id ? Object.assign({}, x, {
                 crmId: vals.e_crmId, name: vals.e_name,
-                address: vals.e_address, phone: vals.e_phone, note: vals.e_note
+                address: vals.e_address, phone: vals.e_phone, note: vals.e_note, dealerName: vals['edit-dealer-select']
             }) : x);
             localStorage.setItem('masons', JSON.stringify(updated));
             updateApp();
@@ -5678,9 +5699,10 @@
             return;
         }
 
+        const dealerName = document.getElementById('loy-dealer') ? document.getElementById('loy-dealer').value : '';
         const loyalties = getMasonLoyalties();
         loyalties.push({
-            id: Date.now(), date, name, mobile, masonId, ihbName, ihbId, ihbMobile, siteName, siteId, uoId, volume, uoStatus, payStatus
+            id: Date.now(), date, name, mobile, masonId, ihbName, ihbId, ihbMobile, siteName, siteId, uoId, volume, uoStatus, payStatus, dealerName
         });
         loyalties.sort((a,b) => (a.date||'') < (b.date||'') ? -1 : (a.date||'') > (b.date||'') ? 1 : 0);
         localStorage.setItem('mason_loyalties', JSON.stringify(loyalties));
@@ -5780,13 +5802,14 @@
             { label:'UO ID', id:'e_uoId', type:'text', val: l.uoId||'' },
             { label:'ভলিউম (ব্যাগ)', id:'e_volume', type:'number', val: l.volume },
             { label:'UO Status', id:'e_uoStatus', type:'select', val: l.uoStatus, options:[{v:'Pending',l:'Pending'},{v:'Approved',l:'Approved'}] },
-            { label:'Pay Status', id:'e_payStatus', type:'select', val: l.payStatus, options:[{v:'Unpaid',l:'Unpaid'},{v:'Paid',l:'Paid'}] }
+            { label:'Pay Status', id:'e_payStatus', type:'select', val: l.payStatus, options:[{v:'Unpaid',l:'Unpaid'},{v:'Paid',l:'Paid'}] },
+            editDealerField(l.dealerName)
         ], function(vals) {
             const updated = loyalties.map(x => x.id === id ? Object.assign({}, x, {
                 date: vals.e_date, name: vals.e_name, mobile: vals.e_mobile,
                 masonId: vals.e_masonId, ihbName: vals.e_ihbName, ihbId: vals.e_ihbId,
                 ihbMobile: vals.e_ihbMobile, siteName: vals.e_siteName, siteId: vals.e_siteId,
-                uoId: vals.e_uoId, volume: vals.e_volume, uoStatus: vals.e_uoStatus, payStatus: vals.e_payStatus
+                uoId: vals.e_uoId, volume: vals.e_volume, uoStatus: vals.e_uoStatus, payStatus: vals.e_payStatus, dealerName: vals['edit-dealer-select']
             }) : x);
             updated.sort((a,b) => (a.date||'') < (b.date||'') ? -1 : (a.date||'') > (b.date||'') ? 1 : 0);
             localStorage.setItem('mason_loyalties', JSON.stringify(updated));
@@ -5802,7 +5825,8 @@
         if(!name) { alert(currentLang === 'bn'?'Engineer-এর নাম দিন!':'Enter Engineer Name!'); return; }
         const engineers = getEngineers();
         if(engineers.some(e => e.name === name)) { alert(currentLang === 'bn'?'এই Engineer অলরেডি আছে!':'Engineer already exists!'); return; }
-        engineers.push({ id: Date.now(), name, address, phone, specialty });
+        const dealerName = document.getElementById('engineer-dealer') ? document.getElementById('engineer-dealer').value : '';
+        engineers.push({ id: Date.now(), name, address, phone, specialty, dealerName });
         localStorage.setItem('engineers', JSON.stringify(engineers));
         document.getElementById('engineer-name').value = '';
         document.getElementById('engineer-address').value = '';
@@ -5832,10 +5856,11 @@
             { label:'নাম', id:'e_name', type:'text', val: e.name },
             { label:'ঠিকানা', id:'e_address', type:'text', val: e.address||'' },
             { label:'মোবাইল', id:'e_phone', type:'text', val: e.phone||'' },
-            { label:'বিশেষত্ব', id:'e_specialty', type:'text', val: e.specialty||'' }
+            { label:'বিশেষত্ব', id:'e_specialty', type:'text', val: e.specialty||'' },
+            editDealerField(e.dealerName)
         ], function(vals) {
             const updated = engineers.map(x => x.id === id ? Object.assign({}, x, {
-                name: vals.e_name, address: vals.e_address, phone: vals.e_phone, specialty: vals.e_specialty
+                name: vals.e_name, address: vals.e_address, phone: vals.e_phone, specialty: vals.e_specialty, dealerName: vals['edit-dealer-select']
             }) : x);
             localStorage.setItem('engineers', JSON.stringify(updated));
             updateApp();
@@ -5851,7 +5876,8 @@
 
         if(!name || isNaN(bags)) { alert(currentLang === 'bn' ? 'অনুগ্রহ করে নাম এবং প্রয়োজনীয় ব্যাগ পূরণ করুন!' : 'Fill Name and Required Bags!'); return; }
         const ihbs = getIHBs();
-        ihbs.push({ id: Date.now(), crmId, name, address, phone, bags });
+        const dealerName = document.getElementById('ihb-dealer') ? document.getElementById('ihb-dealer').value : '';
+        ihbs.push({ id: Date.now(), crmId, name, address, phone, bags, dealerName });
         localStorage.setItem('ihbs', JSON.stringify(ihbs));
 
         document.getElementById('ihb-crm-id').value = '';
@@ -5884,11 +5910,12 @@
             { label:'নাম', id:'e_name', type:'text', val: item.name },
             { label:'ঠিকানা', id:'e_address', type:'text', val: item.address||'' },
             { label:'মোবাইল', id:'e_phone', type:'text', val: item.phone||'' },
-            { label:'প্রয়োজনীয় ব্যাগ', id:'e_bags', type:'number', val: item.bags }
+            { label:'প্রয়োজনীয় ব্যাগ', id:'e_bags', type:'number', val: item.bags },
+            editDealerField(item.dealerName)
         ], function(vals) {
             const updated = ihbs.map(x => x.id === id ? Object.assign({}, x, {
                 crmId: vals.e_crmId, name: vals.e_name,
-                address: vals.e_address, phone: vals.e_phone, bags: parseInt(vals.e_bags)||0
+                address: vals.e_address, phone: vals.e_phone, bags: parseInt(vals.e_bags)||0, dealerName: vals['edit-dealer-select']
             }) : x);
             localStorage.setItem('ihbs', JSON.stringify(updated));
             updateApp();
@@ -6158,9 +6185,10 @@ ${territory}`;
             return;
         }
 
+        const dealerName = document.getElementById('del-dealer') ? document.getElementById('del-dealer').value : '';
         deliveries.push({
             id: Date.now(), date, doNum, type: selectedDo.type, point, truck,
-            driverName, driverMobile, price, bags, saleType, buyerName, counterCustomer
+            driverName, driverMobile, price, bags, saleType, buyerName, counterCustomer, dealerName
         });
         deliveries.sort((a,b) => (a.date||'') < (b.date||'') ? -1 : (a.date||'') > (b.date||'') ? 1 : 0);
         localStorage.setItem('deliveries', JSON.stringify(deliveries));
@@ -6214,13 +6242,14 @@ ${territory}`;
             { label:'কাস্টমার (Counter)', id:'e_counterCustomer', type:'text', val: d.counterCustomer||'' },
             { label:'ট্রাক নম্বর', id:'e_truck', type:'text', val: d.truck||'' },
             { label:'ড্রাইভার নাম', id:'e_driverName', type:'text', val: d.driverName||'' },
-            { label:'ড্রাইভার মোবাইল', id:'e_driverMobile', type:'text', val: d.driverMobile||'' }
+            { label:'ড্রাইভার মোবাইল', id:'e_driverMobile', type:'text', val: d.driverMobile||'' },
+            editDealerField(d.dealerName)
         ], function(vals) {
             const updated = deliveries.map(x => x.id === id ? Object.assign({}, x, {
                 date: vals.e_date, bags: parseInt(vals.e_bags)||0, price: parseFloat(vals.e_price)||0,
                 buyerName: vals.e_buyerName, point: vals.e_point, saleType: vals.e_saleType,
                 counterCustomer: vals.e_counterCustomer, truck: vals.e_truck,
-                driverName: vals.e_driverName, driverMobile: vals.e_driverMobile
+                driverName: vals.e_driverName, driverMobile: vals.e_driverMobile, dealerName: vals['edit-dealer-select']
             }) : x);
             updated.sort((a,b) => (a.date||'') < (b.date||'') ? -1 : (a.date||'') > (b.date||'') ? 1 : 0);
             localStorage.setItem('deliveries', JSON.stringify(updated));
@@ -8931,6 +8960,35 @@ ${territory}`;
         html += '</div>';
         box.innerHTML = html;
     }
+    // ✅ যেকোনো Add-ফর্মের নেটিভ <select> এ বসানোর জন্য — ডিলার লিস্টের <option> HTML
+    function dealerOptionsHtml(selectedName) {
+        const dealers = getDealers();
+        const sel = selectedName || LEGACY_DEALER_NAME;
+        return dealers.map(function(name) {
+            const s = (name === sel) ? ' selected' : '';
+            return '<option value="' + name.replace(/"/g, '&quot;') + '"' + s + '>' + name + '</option>';
+        }).join('');
+    }
+    // ✅ পেজের সব Add-ফর্মের Dealer <select> (class="form-dealer-select") কে সবসময় বর্তমান
+    // ডিলার লিস্ট দিয়ে ভরে রাখে, ইউজার আগে থেকে কিছু সিলেক্ট করে রাখলে সেটা বজায় রেখেই
+    function populateAllDealerSelects() {
+        document.querySelectorAll('select.form-dealer-select').forEach(function(sel) {
+            const current = sel.value || sel.getAttribute('data-selected') || '';
+            sel.innerHTML = dealerOptionsHtml(current || null);
+        });
+    }
+    function editDealerField(currentDealerName) {
+        const isBn = currentLang === 'bn';
+        const dealers = getDealers();
+        const sel = currentDealerName || LEGACY_DEALER_NAME;
+        return {
+            id: 'edit-dealer-select',
+            label: (isBn ? '🏬 ডিলার' : '🏬 Dealer'),
+            type: 'select',
+            val: sel,
+            options: dealers.map(function(name) { return { v: name, l: name }; })
+        };
+    }
     /* ============================================================ */
 
     // বর্তমানে সিলেক্ট করা মাস/বছর ফিল্টারের লেবেল টেক্সট বের করে (PDF হেডিং ইত্যাদির জন্য ব্যবহৃত)
@@ -8970,6 +9028,7 @@ ${territory}`;
 
     function updateApp() {
 
+        populateAllDealerSelects();
         refreshGlobalFilterLabels();
 
         const dos = getDOs();
@@ -9028,7 +9087,7 @@ ${territory}`;
         const engineers   = allEngineers.filter(e => matchesFilter(e.date) && matchesDealerFilter(e.dealerName));
         const ihbs        = allIhbs.filter(i => matchesFilter(i.date) && matchesDealerFilter(i.dealerName));
 
-        const retailers = getRetailers();
+        const retailers = getRetailers().filter(r => matchesDealerFilter(r.dealerName));
         const trash = getTrash();
 
         const _at = getActiveMonthlyTarget();
@@ -9217,7 +9276,7 @@ ${territory}`;
         /* Mason/কন্ট্রাক্টর তালিকা টেবিল */
         const masonTable = document.getElementById('mason-list-table');
         masonTable.innerHTML = '';
-        getMasons().forEach(m => {
+        getMasons().filter(m => matchesDealerFilter(m.dealerName)).forEach(m => {
             masonTable.insertAdjacentHTML('beforeend', '<tr><td><b>' + escHtml(m.crmId || '-') + '</b></td><td><b>' + escHtml(m.name) + '</b></td><td>' + escHtml(m.address || '-') + '</td><td>' + escHtml(ensurePhoneLeadingZero(m.phone) || '-') + '</td><td>' + escHtml(m.note || '-') + '</td><td class="td-action-cell"><div class="action-dropdown"><button class="three-dot-btn" onclick="toggleMenu(event, this)">⋮</button><div class="dropdown-menu"><button class="edit-opt" onclick="editMason(' + idAttr(m.id) + ')">' + (currentLang==='bn'?'✏️ এডিট':'✏️ Edit') + '</button><button class="delete-opt" onclick="deleteMason(' + idAttr(m.id) + ')">' + (currentLang==='bn'?'🗑️ ডিলিট':'🗑️ Delete') + '</button></div></div></td></tr>');
         });
 
@@ -9266,7 +9325,7 @@ ${territory}`;
             factoryTabBtn.classList.toggle('active', truckActiveTab === 'Factory');
         }
         // পুরনো ট্রাক ডাটায় location ফিল্ড না থাকলে ডিফল্ট 'Ghat' ধরা হচ্ছে (ব্যাকওয়ার্ড কম্প্যাটিবিলিটি)
-        getTrucks().filter(t => (t.location || 'Ghat') === truckActiveTab).forEach(t => {
+        getTrucks().filter(t => (t.location || 'Ghat') === truckActiveTab && matchesDealerFilter(t.dealerName)).forEach(t => {
             truckTable.insertAdjacentHTML('beforeend', '<tr><td><b>' + escHtml(t.truckNumber) + '</b></td><td>' + escHtml(t.driverName) + '</td><td>' + escHtml(ensurePhoneLeadingZero(t.driverContact)) + '</td><td class="td-action-cell"><div class="action-dropdown"><button class="three-dot-btn" onclick="toggleMenu(event, this)">⋮</button><div class="dropdown-menu"><button class="edit-opt" onclick="editTruck(' + idAttr(t.id) + ')">' + (currentLang==='bn'?'✏️ এডিট':'✏️ Edit') + '</button><button class="delete-opt" onclick="deleteTruck(' + idAttr(t.id) + ')">' + (currentLang==='bn'?'🗑️ ডিলিট':'🗑️ Delete') + '</button></div></div></td></tr>');
         });
 
@@ -10142,6 +10201,7 @@ ${territory}`;
                 <!-- নতুন লেনদেন এন্ট্রি ফর্ম -->
                 <div class="form-card" id="spd-form-section" style="display:none; border:1px solid #1565c0; background:#fafafa;">
                     <h3>➕ <span id="lan-spd-form-title">নতুন লেনদেন এন্ট্রি</span></h3>
+                    <div class="form-group"><label>🏬 ডিলার:</label><select id="spd-dealer" class="form-dealer-select"></select></div>
                     <div class="form-group"><label id="lbl-spd-0">রিটেইলার:</label><select id="spd-retailer-select" onchange="switchSPDRetailer(this.value)"></select></div>
                     <div class="form-group"><label id="lbl-spd-1">তারিখ:</label><input type="date" id="spd-date"></div>
                     <div class="form-group"><label id="lbl-spd-2">টাকা আদায় রশিদ নং:</label><input type="text" id="spd-memo" placeholder="যেমন: 1024"></div>
