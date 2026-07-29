@@ -1020,6 +1020,61 @@
             margin-bottom: 8px;
         }
         .filter-active-badge-popup.visible { display: block; }
+        /* ✅ ফিল্টার পপআপের Dealer চেকলিস্ট সেকশন (স্ক্রিনশট অনুযায়ী) */
+        .dealer-filter-label {
+            font-size: 13px;
+            font-weight: bold;
+            color: #1a237e;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .dealer-filter-box {
+            border: 1px solid #9fa8da;
+            border-radius: 8px;
+            padding: 6px;
+            max-height: 180px;
+            overflow-y: auto;
+            background: #fff;
+        }
+        .dealer-filter-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 6px;
+            font-size: 14px;
+            color: #1a237e;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .dealer-filter-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #283593;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        .dealer-filter-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .dealer-filter-actions button {
+            flex: 1;
+            padding: 9px 6px;
+            border: 1px solid #c62828;
+            border-radius: 7px;
+            background: #fff;
+            color: #c62828;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .dealer-filter-actions button.dealer-select-all-btn {
+            border-color: #2e7d32;
+            color: #2e7d32;
+        }
         .filter-clear-popup-btn {
             width: 100%;
             padding: 9px;
@@ -1353,6 +1408,7 @@
             </div>
             <div class="filter-active-badge-popup" id="global-filter-badge"></div>
             <div id="filter-row2"></div>
+            <div id="dealer-filter-section" style="margin-top:14px;"></div>
             <button class="filter-clear-popup-btn" onclick="clearGlobalFilter()">✕ <span id="lbl-filter-clear">সব দেখাও (ফিল্টার মুছুন)</span></button>
         </div>
     </div>
@@ -4340,8 +4396,8 @@
         const openingBalance = getLedgerOpeningBalance();
         const totalCommission = getLedgerTotalCommission();
         const stockInfo = computeLedgerCurrentStock();
-        const filteredDeliveries = getDeliveries().filter(d => matchesFilter(d.date));
-        const filteredPayments = getPayments().filter(p => matchesFilter(p.date));
+        const filteredDeliveries = getDeliveries().filter(d => matchesFilter(d.date) && matchesDealerFilter(d.dealerName));
+        const filteredPayments = getPayments().filter(p => matchesFilter(p.date) && matchesDealerFilter(p.dealerName));
         const totalValue = filteredDeliveries.reduce((s, d) => s + ((d.bags || 0) * (d.price || 0)), 0);
         const totalPayment = filteredPayments.reduce((s, p) => s + (p.amount || 0), 0);
         return openingBalance + totalValue - totalPayment - totalCommission + stockInfo.totalValue;
@@ -4568,8 +4624,8 @@
 
         // ✅ লেজার সবসময় উপরের গ্লোবাল ফিল্টারে বাছাই করা মাস/বছরের তথ্য নিয়ে কাজ করবে
         // ✅ সেলস লাইন = প্রতিটা ডেলিভারি চালান (ডেলিভারি ট্যাবে যা এন্ট্রি দেওয়া হয়), DO স্টক-ক্রয় এন্ট্রি নয়
-        const filteredDeliveries = allDeliveries.filter(d => matchesFilter(d.date)).slice().sort((a, b) => new Date(a.date) - new Date(b.date));
-        const filteredPayments = allPayments.filter(p => matchesFilter(p.date));
+        const filteredDeliveries = allDeliveries.filter(d => matchesFilter(d.date) && matchesDealerFilter(d.dealerName)).slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+        const filteredPayments = allPayments.filter(p => matchesFilter(p.date) && matchesDealerFilter(p.dealerName));
 
         // তারিখ অনুযায়ী পেমেন্ট গ্রুপ করা (রানিং ব্যালেন্স হিসাবে ব্যবহারের জন্য, টেবিলে আলাদা কলাম হিসেবে দেখানো হচ্ছে না)
         const paymentsByDate = {};
@@ -5652,7 +5708,7 @@
         const eDate = document.getElementById('mason-loy-end-date') ? document.getElementById('mason-loy-end-date').value : '';
 
         const loyalties = getMasonLoyalties().filter(function(l) {
-            if (!matchesFilter(l.date)) return false;
+            if (!matchesFilter(l.date) || !matchesDealerFilter(l.dealerName)) return false;
             if (sDate && l.date < sDate) return false;
             if (eDate && l.date > eDate) return false;
             return true;
@@ -7121,7 +7177,7 @@ ${territory}`;
         } else if (dataType === 'retailerspd') {
             headers = ["Date", "Receipt No", "Quantity", "Rate", "Total Amount", "Deposit", "Commission", "Total Due"];
             if (_spDetailRetailerId !== null) {
-                const spdEntries = getRetailerSPEntriesFor(_spDetailRetailerId).filter(e => matchesFilter(e.date));
+                const spdEntries = getRetailerSPEntriesFor(_spDetailRetailerId).filter(e => matchesFilter(e.date) && matchesDealerFilter(e.dealerName));
                 spdEntries.forEach(e => {
                     rows.push([e.date, e.memo || '', e.qty || 0, e.price || 0, e.totalAmount || 0, e.paid || 0, e.commission || 0, e.totalDue || 0]);
                 });
@@ -7869,6 +7925,7 @@ ${territory}`;
     /* ===== Banner Popup Functions ===== */
     function openFilterPopup() {
         document.getElementById('filter-popup').classList.add('show');
+        renderDealerFilterSection();
     }
     function closeFilterPopup() {
         document.getElementById('filter-popup').classList.remove('show');
@@ -8682,6 +8739,7 @@ ${territory}`;
             document.getElementById('global-month-filter').value = 0; // সব মাস
         }
         updateFilterBadge();
+        renderDealerFilterSection();
         // dot sync on load
         const f = getActiveFilter();
         const dot = document.getElementById('filter-active-dot');
@@ -8703,6 +8761,8 @@ ${territory}`;
         document.getElementById('global-month-filter').value = 0;
         document.getElementById('global-year-filter').value = 0;
         localStorage.setItem(FILTER_KEY, JSON.stringify({ month: 0, year: 0 }));
+        saveActiveDealerFilter(getDealers().slice()); // ✅ ডিলার ফিল্টারও রিসেট করে সব ডিলার সিলেক্ট করে দেওয়া হচ্ছে
+        renderDealerFilterSection();
         updateFilterBadge();
         updateApp();
         // dot clear
@@ -8774,6 +8834,105 @@ ${territory}`;
     }
     /* ============================================================ */
 
+    /* ============================================================
+       ✅ ডিলার ফিল্টার সিস্টেম (Phase 1)
+       - Dealer রেজিস্ট্রি: localStorage-এ ডিলারের নামের লিস্ট থাকে
+       - বর্তমানে অ্যাপের কোনো ফর্মে dealerName সেভ হয় না, তাই পুরনো/পুরনো-ধরনের
+         সব রেকর্ড ডিফল্টভাবে LEGACY_DEALER_NAME ("Ullapara Variety Store")-এর
+         আন্ডারে ধরা হয় — অর্থাৎ dealerName ফাঁকা/undefined থাকলে সেটাকে এই
+         ডিলারের ডাটা হিসেবেই গণনা করা হবে।
+       - এই ফেজে Delivery/Payment/Loyalty/Engineer/IHB-এর মূল ফিল্টারিং এর সাথে
+         ডিলার-চেক যুক্ত করা হয়েছে। ফর্মে সরাসরি Dealer select (নতুন এন্ট্রি করার
+         সময় কোন ডিলারের আন্ডারে যাবে তা বেছে নেওয়া) এবং DO/Stock carry-forward
+         এর মতো জটিল হিসাব পরবর্তী ধাপে (Phase 2) যুক্ত হবে।
+       ============================================================ */
+    const DEALER_LIST_KEY = 'app_dealers_list';
+    const DEALER_FILTER_KEY = 'app_active_dealer_filter';
+    const LEGACY_DEALER_NAME = 'Ullapara Variety Store';
+
+    function getDealers() {
+        let list = JSON.parse(localStorage.getItem(DEALER_LIST_KEY) || 'null');
+        if (!list || !Array.isArray(list) || list.length === 0) {
+            list = [LEGACY_DEALER_NAME];
+            localStorage.setItem(DEALER_LIST_KEY, JSON.stringify(list));
+        }
+        return list;
+    }
+    function saveDealers(list) {
+        localStorage.setItem(DEALER_LIST_KEY, JSON.stringify(list));
+    }
+    function getActiveDealerFilter() {
+        let active = JSON.parse(localStorage.getItem(DEALER_FILTER_KEY) || 'null');
+        if (!active || !Array.isArray(active)) {
+            active = getDealers().slice(); // ডিফল্ট: সব ডিলার সিলেক্টেড (কোনো ফিল্টার না থাকার মতোই)
+            localStorage.setItem(DEALER_FILTER_KEY, JSON.stringify(active));
+        }
+        return active;
+    }
+    function saveActiveDealerFilter(active) {
+        localStorage.setItem(DEALER_FILTER_KEY, JSON.stringify(active));
+    }
+    // dealerName ফাঁকা থাকলে LEGACY_DEALER_NAME ("Ullapara Variety Store") এর আন্ডারে গণনা হবে
+    function matchesDealerFilter(dealerName) {
+        const dealers = getDealers();
+        if (dealers.length <= 1) return true; // এখনো একটার বেশি ডিলার যোগ না হলে ফিল্টারিং-এর দরকার নেই
+        const active = getActiveDealerFilter();
+        const name = (dealerName && String(dealerName).trim()) ? String(dealerName).trim() : LEGACY_DEALER_NAME;
+        return active.indexOf(name) !== -1;
+    }
+    function toggleDealerFilterItem(name) {
+        let active = getActiveDealerFilter();
+        if (active.indexOf(name) !== -1) active = active.filter(n => n !== name);
+        else active.push(name);
+        saveActiveDealerFilter(active);
+        renderDealerFilterSection();
+        updateApp();
+    }
+    function selectAllDealersFilter() {
+        saveActiveDealerFilter(getDealers().slice());
+        renderDealerFilterSection();
+        updateApp();
+    }
+    function promptAddNewDealer() {
+        const isBn = currentLang === 'bn';
+        const name = prompt(isBn ? 'নতুন ডিলারের নাম লিখুন:' : 'Enter new dealer name:');
+        if (!name || !name.trim()) return;
+        const trimmed = name.trim();
+        const dealers = getDealers();
+        if (dealers.indexOf(trimmed) !== -1) {
+            alert(isBn ? 'এই নামে ডিলার আগে থেকেই আছে।' : 'A dealer with this name already exists.');
+            return;
+        }
+        dealers.push(trimmed);
+        saveDealers(dealers);
+        const active = getActiveDealerFilter();
+        active.push(trimmed); // নতুন ডিলার যোগ হলে সেটা ডিফল্টভাবে সিলেক্টেড থাকবে
+        saveActiveDealerFilter(active);
+        renderDealerFilterSection();
+        updateApp();
+    }
+    function renderDealerFilterSection() {
+        const box = document.getElementById('dealer-filter-section');
+        if (!box) return;
+        const dealers = getDealers();
+        const active = getActiveDealerFilter();
+        const isBn = currentLang === 'bn';
+        let html = '<div class="dealer-filter-label">🏬 ' + (isBn ? 'ডিলার' : 'Dealer') + ':</div>';
+        html += '<div class="dealer-filter-box">';
+        dealers.forEach(function(name) {
+            const checked = active.indexOf(name) !== -1 ? 'checked' : '';
+            const safe = name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            html += '<label class="dealer-filter-item"><input type="checkbox" ' + checked + ' onchange="toggleDealerFilterItem(\'' + safe + '\')"> <span>' + name + '</span></label>';
+        });
+        html += '</div>';
+        html += '<div class="dealer-filter-actions">';
+        html += '<button class="dealer-select-all-btn" onclick="selectAllDealersFilter()">✅ ' + (isBn ? 'সব নির্বাচন' : 'Select all') + '</button>';
+        html += '<button onclick="promptAddNewDealer()">+ ' + (isBn ? 'নতুন ডিলার' : 'New dealer') + '</button>';
+        html += '</div>';
+        box.innerHTML = html;
+    }
+    /* ============================================================ */
+
     // বর্তমানে সিলেক্ট করা মাস/বছর ফিল্টারের লেবেল টেক্সট বের করে (PDF হেডিং ইত্যাদির জন্য ব্যবহৃত)
     function getFilterMonthLabel() {
         var f = getActiveFilter();
@@ -8821,8 +8980,8 @@ ${territory}`;
         const allIhbs = getIHBs();
 
         // ✅ সব ডাটায় গ্লোবাল ফিল্টার প্রয়োগ
-        const deliveries  = allDeliveries.filter(d => matchesFilter(d.date));
-        const payments    = allPayments.filter(p => matchesFilter(p.date));
+        const deliveries  = allDeliveries.filter(d => matchesFilter(d.date) && matchesDealerFilter(d.dealerName));
+        const payments    = allPayments.filter(p => matchesFilter(p.date) && matchesDealerFilter(p.dealerName));
 
         // DO ফিল্টার: এই মাসের DO + আগের মাসের যেসব DO-তে এখনো bag বাকি আছে (carry-forward)
         // নিয়ম: জানুয়ারির বাকি DO ফেব্রুয়ারিতে দেখাবে — কিন্তু ফেব্রুয়ারির DO জানুয়ারিতে দেখাবে না
@@ -8865,9 +9024,9 @@ ${territory}`;
             return (d.bags || 0) - deliveredBeforeThisMonth > 0;
         });
 
-        const loyalties   = allLoyalties.filter(l => matchesFilter(l.date));
-        const engineers   = allEngineers.filter(e => matchesFilter(e.date));
-        const ihbs        = allIhbs.filter(i => matchesFilter(i.date));
+        const loyalties   = allLoyalties.filter(l => matchesFilter(l.date) && matchesDealerFilter(l.dealerName));
+        const engineers   = allEngineers.filter(e => matchesFilter(e.date) && matchesDealerFilter(e.dealerName));
+        const ihbs        = allIhbs.filter(i => matchesFilter(i.date) && matchesDealerFilter(i.dealerName));
 
         const retailers = getRetailers();
         const trash = getTrash();
