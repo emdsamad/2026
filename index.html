@@ -1325,23 +1325,13 @@
                 <div class="profile-field-row">
                     <span class="field-label" id="lbl-profile-desg">Designation:</span>
                     <span class="field-val" id="val-profile-desg">-</span>
-                    <select id="input-profile-desg" class="profile-inline-input" style="display:none;" onchange="saveProfileField('desg')">
-                        <option value="Jr Executive">Jr Executive</option>
-                        <option value="Executive">Executive</option>
-                        <option value="Sr Executive">Sr Executive</option>
-                        <option value="ASM">ASM</option>
-                        <option value="ZSM">ZSM</option>
-                        <option value="DSM">DSM</option>
-                        <option value="Manager">Manager</option>
-                        <option value="Sr Manager">Sr Manager</option>
-                        <option value="GM">GM</option>
-                        <option value="Sr GM">Sr GM</option>
-                    </select>
+                    <select id="input-profile-desg" class="profile-inline-input" style="display:none;" onchange="saveProfileField('desg')"></select>
                     <div class="action-dropdown profile-dropdown">
                         <button class="three-dot-btn" onclick="toggleMenu(event, this)">⋮</button>
                         <div class="dropdown-menu">
                             <button onclick="editProfileField('desg')">✏️ Edit</button>
                             <button onclick="saveProfileField('desg')">💾 Save</button>
+                            <button onclick="openDesignationManagePopup()">⚙️ ম্যানেজ</button>
                         </div>
                     </div>
                 </div>
@@ -1421,6 +1411,19 @@
             <div id="filter-row2"></div>
             <div id="dealer-filter-section" style="margin-top:14px;"></div>
             <button class="filter-clear-popup-btn" onclick="clearGlobalFilter()">✕ <span id="lbl-filter-clear">সব দেখাও (ফিল্টার মুছুন)</span></button>
+        </div>
+    </div>
+
+    <!-- ডিজিগনেশন ম্যানেজ পপআপ -->
+    <div id="designation-manage-popup" class="banner-popup-overlay" onclick="if(event.target===this)closeDesignationManagePopup()">
+        <div class="banner-popup-box">
+            <button class="popup-close-btn" onclick="closeDesignationManagePopup()">✕</button>
+            <h3>⚙️ <span>ডিজিগনেশন ম্যানেজ</span></h3>
+            <div id="designation-manage-list" class="dealer-filter-box" style="margin-bottom:10px;"></div>
+            <div style="display:flex;gap:8px;">
+                <input type="text" id="designation-new-input" placeholder="নতুন ডিজিগনেশনের নাম" style="flex:1;padding:9px 8px;border:1px solid #9fa8da;border-radius:7px;font-size:13px;box-sizing:border-box;">
+                <button onclick="addNewDesignation()" style="background:#2e7d32;color:#fff;border:none;border-radius:7px;padding:9px 14px;font-size:13px;font-weight:bold;cursor:pointer;">+ যোগ</button>
+            </div>
         </div>
     </div>
 
@@ -9063,6 +9066,78 @@ ${territory}`;
     }
     /* ============================================================ */
 
+    /* ============================================================
+       ✅ ডিজিগনেশন রেজিস্ট্রি — Add/Delete করা যায় (Dealer registry-এর মতোই)
+       ============================================================ */
+    const DESIGNATION_LIST_KEY = 'app_designations_list';
+    const DEFAULT_DESIGNATIONS = ['Jr Executive','Executive','Sr Executive','ASM','ZSM','DSM','Manager','Sr Manager','GM','Sr GM'];
+
+    function getDesignations() {
+        let list = JSON.parse(localStorage.getItem(DESIGNATION_LIST_KEY) || 'null');
+        if (!list || !Array.isArray(list) || list.length === 0) {
+            list = DEFAULT_DESIGNATIONS.slice();
+            localStorage.setItem(DESIGNATION_LIST_KEY, JSON.stringify(list));
+        }
+        return list;
+    }
+    function saveDesignations(list) {
+        localStorage.setItem(DESIGNATION_LIST_KEY, JSON.stringify(list));
+    }
+    // প্রোফাইলের ডিজিগনেশন <select> এ অপশন ভরে দেয়, বর্তমান সেভ করা মান বজায় রেখে
+    function renderDesignationSelectOptions() {
+        const sel = document.getElementById('input-profile-desg');
+        if (!sel) return;
+        const current = localStorage.getItem('app_profile_desg') || '';
+        const list = getDesignations();
+        sel.innerHTML = list.map(function(name) {
+            const s = (name === current) ? ' selected' : '';
+            return '<option value="' + name.replace(/"/g, '&quot;') + '"' + s + '>' + name + '</option>';
+        }).join('');
+    }
+    function openDesignationManagePopup() {
+        closeAllMenus();
+        document.getElementById('designation-manage-popup').classList.add('show');
+        r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8();
+    }
+    function closeDesignationManagePopup() {
+        document.getElementById('designation-manage-popup').classList.remove('show');
+    }
+    function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
+        const box = document.getElementById('designation-manage-list');
+        if (!box) return;
+        const list = getDesignations();
+        box.innerHTML = list.map(function(name) {
+            const safe = name.replace(/'/g, "\\'");
+            return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 6px;border-bottom:1px solid #eee;font-size:14px;color:#1a237e;font-weight:600;">'
+                + '<span>' + name + '</span>'
+                + '<button onclick="deleteDesignationItem(\'' + safe + '\')" style="background:#c62828;color:#fff;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;">🗑️</button></div>';
+        }).join('');
+    }
+    function deleteDesignationItem(name) {
+        if (!confirm((currentLang === 'bn' ? '"' + name + '" ডিলিট করতে চান?' : 'Delete "' + name + '"?'))) return;
+        const list = getDesignations().filter(function(n) { return n !== name; });
+        saveDesignations(list);
+        r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8();
+        renderDesignationSelectOptions();
+    }
+    function addNewDesignation() {
+        const inp = document.getElementById('designation-new-input');
+        const name = inp.value.trim();
+        if (!name) return;
+        const list = getDesignations();
+        if (list.indexOf(name) !== -1) {
+            alert(currentLang === 'bn' ? 'এই নামে ডিজিগনেশন আগে থেকেই আছে।' : 'This designation already exists.');
+            return;
+        }
+        list.push(name);
+        saveDesignations(list);
+        inp.value = '';
+        r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8();
+        renderDesignationSelectOptions();
+    }
+    /* ============================================================ */
+
+
     // বর্তমানে সিলেক্ট করা মাস/বছর ফিল্টারের লেবেল টেক্সট বের করে (PDF হেডিং ইত্যাদির জন্য ব্যবহৃত)
     function getFilterMonthLabel() {
         var f = getActiveFilter();
@@ -9101,6 +9176,7 @@ ${territory}`;
     function updateApp() {
 
         populateAllDealerSelects();
+        renderDesignationSelectOptions();
         refreshGlobalFilterLabels();
 
         const dos = getDOs();
