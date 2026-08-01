@@ -9106,12 +9106,32 @@ ${territory}`;
         const box = document.getElementById('designation-manage-list');
         if (!box) return;
         const list = getDesignations();
-        box.innerHTML = list.map(function(name) {
+        box.innerHTML = list.map(function(name, idx) {
             const safe = name.replace(/'/g, "\\'");
-            return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 6px;border-bottom:1px solid #eee;font-size:14px;color:#1a237e;font-weight:600;">'
-                + '<span>' + name + '</span>'
-                + '<button onclick="deleteDesignationItem(\'' + safe + '\')" style="background:#c62828;color:#fff;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;">🗑️</button></div>';
+            const isFirst = idx === 0;
+            const isLast = idx === list.length - 1;
+            return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 6px;border-bottom:1px solid #eee;font-size:14px;color:#1a237e;font-weight:600;gap:6px;">'
+                + '<span style="flex:1;">' + (idx + 1) + '. ' + name + '</span>'
+                + '<div style="display:flex;gap:4px;flex-shrink:0;">'
+                + '<button onclick="moveDesignationItem(\'' + safe + '\', -1)" ' + (isFirst ? 'disabled style="opacity:0.3;background:#9fa8da;color:#fff;border:none;border-radius:6px;padding:5px 9px;font-size:12px;"' : 'style="background:#1a237e;color:#fff;border:none;border-radius:6px;padding:5px 9px;cursor:pointer;font-size:12px;"') + '>⬆️</button>'
+                + '<button onclick="moveDesignationItem(\'' + safe + '\', 1)" ' + (isLast ? 'disabled style="opacity:0.3;background:#9fa8da;color:#fff;border:none;border-radius:6px;padding:5px 9px;font-size:12px;"' : 'style="background:#1a237e;color:#fff;border:none;border-radius:6px;padding:5px 9px;cursor:pointer;font-size:12px;"') + '>⬇️</button>'
+                + '<button onclick="deleteDesignationItem(\'' + safe + '\')" style="background:#c62828;color:#fff;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;">🗑️</button>'
+                + '</div></div>';
         }).join('');
+    }
+    // ✅ ডিজিগনেশন লিস্টে উপরে/নিচে সরিয়ে অর্ডার (পজিশন) কন্ট্রোল করার জন্য
+    function moveDesignationItem(name, direction) {
+        const list = getDesignations();
+        const idx = list.indexOf(name);
+        if (idx === -1) return;
+        const newIdx = idx + direction;
+        if (newIdx < 0 || newIdx >= list.length) return;
+        const tmp = list[idx];
+        list[idx] = list[newIdx];
+        list[newIdx] = tmp;
+        saveDesignations(list);
+        r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8();
+        renderDesignationSelectOptions();
     }
     function deleteDesignationItem(name) {
         if (!confirm((currentLang === 'bn' ? '"' + name + '" ডিলিট করতে চান?' : 'Delete "' + name + '"?'))) return;
