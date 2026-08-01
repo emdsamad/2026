@@ -1325,7 +1325,18 @@
                 <div class="profile-field-row">
                     <span class="field-label" id="lbl-profile-desg">Designation:</span>
                     <span class="field-val" id="val-profile-desg">-</span>
-                    <input type="text" id="input-profile-desg" class="profile-inline-input" style="display:none;" onkeydown="handleProfileKey(event, 'desg')">
+                    <select id="input-profile-desg" class="profile-inline-input" style="display:none;" onchange="saveProfileField('desg')">
+                        <option value="Jr Executive">Jr Executive</option>
+                        <option value="Executive">Executive</option>
+                        <option value="Sr Executive">Sr Executive</option>
+                        <option value="ASM">ASM</option>
+                        <option value="ZSM">ZSM</option>
+                        <option value="DSM">DSM</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Sr Manager">Sr Manager</option>
+                        <option value="GM">GM</option>
+                        <option value="Sr GM">Sr GM</option>
+                    </select>
                     <div class="action-dropdown profile-dropdown">
                         <button class="three-dot-btn" onclick="toggleMenu(event, this)">⋮</button>
                         <div class="dropdown-menu">
