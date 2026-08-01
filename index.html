@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>উল্লাপাড়া ভ্যারাইটি স্টোর - ট্র্যাকিং অ্যাপ</title>
+    <title>STS</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a237e">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -1803,6 +1803,19 @@
                 <div id="dash-total-contractor" style="font-size:10px;color:#555;margin-top:3px;">-</div>
             </div>
         </div>
+        <!-- অ্যাক্টিভ রিটেইলার/কন্ট্রাক্টর টার্গেট ও অ্যাচিভমেন্ট -->
+        <div class="strike-rate-container" style="margin-top:4px;">
+            <div class="card" style="border-top:4px solid #6a1b9a;background:linear-gradient(180deg,#fff 0%,#fdf6ff 100%);">
+                <h4 id="dash-retailer-target-heading" style="color:#6a1b9a;font-size:9px;margin-bottom:6px;">🎯 অ্যাক্টিভ রিটেইলার টার্গেট</h4>
+                <p id="dash-retailer-target" class="strike-rate-value" style="color:#6a1b9a;font-size:22px;margin:0;">-</p>
+                <div id="dash-retailer-target-achi" style="font-size:10px;color:#555;margin-top:3px;">-</div>
+            </div>
+            <div class="card" style="border-top:4px solid #e65100;background:linear-gradient(180deg,#fff 0%,#fff8f5 100%);">
+                <h4 id="dash-contractor-target-heading" style="color:#e65100;font-size:9px;margin-bottom:6px;">🎯 অ্যাক্টিভ কন্ট্রাক্টর টার্গেট</h4>
+                <p id="dash-contractor-target" class="strike-rate-value" style="color:#e65100;font-size:22px;margin:0;">-</p>
+                <div id="dash-contractor-target-achi" style="font-size:10px;color:#555;margin-top:3px;">-</div>
+            </div>
+        </div>
         <!-- গতকাল ও আজকের ডেলিভারি -->
         <div class="strike-rate-container" style="margin-top:4px;">
             <div class="card" style="border-top:4px solid #1565c0;background:linear-gradient(180deg,#fff 0%,#e3f2fd 100%);">
@@ -2236,6 +2249,14 @@
                             <label id="target-coll-label" style="font-size:12px;color:#555;font-weight:bold;display:block;margin-bottom:4px;">💰 কালেকশন টার্গেট (টাকা)</label>
                             <input type="number" id="target-coll-inp" placeholder="যেমন: 5000000" style="width:100%;padding:9px 6px;border:1px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box;">
                         </div>
+                        <div style="flex:2;min-width:120px;">
+                            <label id="target-retailer-label" style="font-size:12px;color:#555;font-weight:bold;display:block;margin-bottom:4px;">👥 অ্যাক্টিভ রিটেইলার টার্গেট</label>
+                            <input type="number" id="target-retailer-inp" placeholder="যেমন: 50" style="width:100%;padding:9px 6px;border:1px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                        </div>
+                        <div style="flex:2;min-width:120px;">
+                            <label id="target-contractor-label" style="font-size:12px;color:#555;font-weight:bold;display:block;margin-bottom:4px;">🧱 অ্যাক্টিভ কন্ট্রাক্টর টার্গেট</label>
+                            <input type="number" id="target-contractor-inp" placeholder="যেমন: 20" style="width:100%;padding:9px 6px;border:1px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                        </div>
                         <div>
                             <button id="target-save-btn" onclick="saveMonthlyTarget()" style="background:#1a237e;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:bold;cursor:pointer;">💾 সেভ</button>
                         </div>
@@ -2247,6 +2268,8 @@
                         <th style="padding:10px 8px;text-align:left;">মাস-বছর</th>
                         <th style="padding:10px 8px;text-align:right;">সেলস টার্গেট</th>
                         <th style="padding:10px 8px;text-align:right;">কালেকশন টার্গেট</th>
+                        <th style="padding:10px 8px;text-align:right;">রিটেইলার টার্গেট</th>
+                        <th style="padding:10px 8px;text-align:right;">কন্ট্রাক্টর টার্গেট</th>
                         <th style="padding:10px 8px;text-align:center;">মুছুন</th>
                     </tr></thead>
                     <tbody id="target-list-table"></tbody>
@@ -5985,6 +6008,36 @@
         const finalPaymentLagbe = paymentLagbeAmt > 0 ? paymentLagbeAmt : 0;
         const requiredCollLac = finalPaymentLagbe > 0 ? ((finalPaymentLagbe / daysLeft) / 100000).toFixed(1) : '0.0';
 
+        // ✅ অ্যাক্টিভ রিটেইলার/কন্ট্রাক্টর টার্গেট — যেদিন রিপোর্ট বানানো হচ্ছে (আজকের তারিখ) পর্যন্ত গণনা
+        const todayStr = localDateStr(refDate);
+        const retailerTargetVal = _at.retailerTarget || 0;
+        const contractorTargetVal = _at.contractorTarget || 0;
+        const allRetailersForReport = getRetailers();
+        const retailerNamesForReport = new Set(allRetailersForReport.map(function(r) { return r.name; }));
+        const deliveriesUpToToday = allDeliveries.filter(function(d) {
+            if (!d.date) return false;
+            const ds = String(d.date).split('T')[0];
+            const dParts = ds.split('-');
+            if (dParts.length < 3) return false;
+            return parseInt(dParts[1]) === filterMonth && parseInt(dParts[0]) === filterYear && ds <= todayStr;
+        });
+        const retSeenForReport = {};
+        deliveriesUpToToday.forEach(function(d) {
+            if (d.saleType !== "Counter" && d.buyerName && retailerNamesForReport.has(d.buyerName)) retSeenForReport[d.buyerName] = true;
+        });
+        const activeRetailerCountForReport = Object.keys(retSeenForReport).length;
+        const allLoyaltiesForReport = getMasonLoyalties();
+        const loyaltiesUpToToday = allLoyaltiesForReport.filter(function(l) {
+            if (!l.date) return false;
+            const ds = String(l.date).split('T')[0];
+            const dParts = ds.split('-');
+            if (dParts.length < 3) return false;
+            return parseInt(dParts[1]) === filterMonth && parseInt(dParts[0]) === filterYear && ds <= todayStr;
+        });
+        const conSeenForReport = {};
+        loyaltiesUpToToday.forEach(function(l) { const k = l.masonId || l.name || ''; if (k) conSeenForReport[k] = true; });
+        const activeContractorCountForReport = Object.keys(conSeenForReport).length;
+
         // রিপোর্ট পেজের ইনপুট বক্স থেকে প্রজেকশন সংগ্রহ
         const salesProjBags = parseInt(document.getElementById('morn-sales-proj').value) || 0;
         const salesProjMT = (salesProjBags / 20).toFixed(0);
@@ -6008,6 +6061,14 @@ Target- ${collectionTargetLac} Lac
 Upto: ${formattedYesterday}-
 Collection - ${totalCollectedLac} Lac
 Achi: ${collectionAchi} %
+
+Month: ${monthStr}
+Target Active Retail: ${retailerTargetVal}
+Upto ${formattedToday} Achi: ${activeRetailerCountForReport}
+
+Month: ${monthStr}
+Target Active Contractor: ${contractorTargetVal}
+Upto ${formattedToday} Achi: ${activeContractorCountForReport}
 
 Required Rate:
 ${formattedToday}
@@ -9478,6 +9539,39 @@ ${territory}`;
             if (conHeadEl) conHeadEl.innerText = (currentLang === 'bn' ? '🧱 অ্যাক্টিভ কন্ট্রাক্টর' : '🧱 Active Contractor');
         })();
 
+        /* ===== অ্যাক্টিভ রিটেইলার/কন্ট্রাক্টর টার্গেট বনাম অ্যাচিভমেন্ট ===== */
+        (function() {
+            var retTargetEl = document.getElementById('dash-retailer-target');
+            var conTargetEl = document.getElementById('dash-contractor-target');
+            if (!retTargetEl || !conTargetEl) return;
+            var retSeen = {};
+            var retailerNames = new Set(retailers.map(function(r) { return r.name; }));
+            deliveries.forEach(function(d) {
+                if (d.saleType !== "Counter" && d.buyerName && retailerNames.has(d.buyerName)) retSeen[d.buyerName] = true;
+            });
+            var activeRetailerCount = Object.keys(retSeen).length;
+            var conSeen = {};
+            loyalties.forEach(function(l) { var k = l.masonId || l.name || ''; if (k) conSeen[k] = true; });
+            var activeContractorCount = Object.keys(conSeen).length;
+
+            var retailerTargetVal = _at.retailerTarget || 0;
+            var contractorTargetVal = _at.contractorTarget || 0;
+            var retAchi = retailerTargetVal > 0 ? Math.round((activeRetailerCount / retailerTargetVal) * 100) : 0;
+            var conAchi = contractorTargetVal > 0 ? Math.round((activeContractorCount / contractorTargetVal) * 100) : 0;
+
+            retTargetEl.innerText = convertToLangNum(activeRetailerCount) + ' / ' + convertToLangNum(retailerTargetVal);
+            var retAchiEl = document.getElementById('dash-retailer-target-achi');
+            if (retAchiEl) retAchiEl.innerText = (currentLang === 'bn' ? 'অ্যাচিভমেন্ট ' : 'Achievement ') + convertToLangNum(retAchi) + '%';
+            var retHeadEl2 = document.getElementById('dash-retailer-target-heading');
+            if (retHeadEl2) retHeadEl2.innerText = (currentLang === 'bn' ? '🎯 অ্যাক্টিভ রিটেইলার টার্গেট' : '🎯 Active Retailer Target');
+
+            conTargetEl.innerText = convertToLangNum(activeContractorCount) + ' / ' + convertToLangNum(contractorTargetVal);
+            var conAchiEl = document.getElementById('dash-contractor-target-achi');
+            if (conAchiEl) conAchiEl.innerText = (currentLang === 'bn' ? 'অ্যাচিভমেন্ট ' : 'Achievement ') + convertToLangNum(conAchi) + '%';
+            var conHeadEl2 = document.getElementById('dash-contractor-target-heading');
+            if (conHeadEl2) conHeadEl2.innerText = (currentLang === 'bn' ? '🎯 অ্যাক্টিভ কন্ট্রাক্টর টার্গেট' : '🎯 Active Contractor Target');
+        })();
+
         /* ===== ডিলার লেজার আউটস্ট্যান্ডিং ব্যালেন্স ===== */
         (function() {
             var el = document.getElementById('dash-outstanding-balance');
@@ -9633,15 +9727,19 @@ ${territory}`;
         var year = parseInt(document.getElementById('target-year-inp').value);
         var salesBags = parseInt(document.getElementById('target-sales-inp').value) || 0;
         var collAmt = parseFloat(document.getElementById('target-coll-inp').value) || 0;
+        var retailerTarget = parseInt(document.getElementById('target-retailer-inp').value) || 0;
+        var contractorTarget = parseInt(document.getElementById('target-contractor-inp').value) || 0;
         if (!year || year < 2020 || year > 2099) { alert(currentLang === 'bn' ? 'সঠিক বছর দিন!' : 'Please enter a valid year!'); return; }
         var targets = getMonthlyTargets();
         var idx = targets.findIndex(function(t){ return t.month===month && t.year===year; });
-        var entry = { month:month, year:year, salesBags:salesBags, collAmt:collAmt };
+        var entry = { month:month, year:year, salesBags:salesBags, collAmt:collAmt, retailerTarget:retailerTarget, contractorTarget:contractorTarget };
         if (idx !== -1) { targets[idx] = entry; } else { targets.push(entry); }
         targets.sort(function(a,b){ return (b.year*12+b.month)-(a.year*12+a.month); });
         localStorage.setItem('monthly_targets', JSON.stringify(targets));
         document.getElementById('target-sales-inp').value = '';
         document.getElementById('target-coll-inp').value = '';
+        document.getElementById('target-retailer-inp').value = '';
+        document.getElementById('target-contractor-inp').value = '';
         renderTargetTable();
         updateApp();
         alert(currentLang === 'bn' ? '✅ টার্গেট সেভ হয়েছে!' : '✅ Target saved!');
@@ -9661,7 +9759,7 @@ ${territory}`;
         var month = (f.month && f.month > 0) ? f.month : (now.getMonth() + 1);
         var year  = (f.year  && f.year  > 0) ? f.year  : now.getFullYear();
         var found = getMonthlyTargets().find(function(t){ return t.month === month && t.year === year; });
-        return found || { month: month, year: year, salesBags: 0, collAmt: 0 };
+        return found || { month: month, year: year, salesBags: 0, collAmt: 0, retailerTarget: 0, contractorTarget: 0 };
     }
 
     function renderTargetTable() {
@@ -9685,12 +9783,20 @@ ${territory}`;
         if (salesLbl) salesLbl.innerText = isBn ? '🎯 সেলস টার্গেট (ব্যাগ)' : '🎯 Sales Target (Bags)';
         var collLbl = document.getElementById('target-coll-label');
         if (collLbl) collLbl.innerText = isBn ? '💰 কালেকশন টার্গেট (টাকা)' : '💰 Collection Target (Tk)';
+        var retLbl = document.getElementById('target-retailer-label');
+        if (retLbl) retLbl.innerText = isBn ? '👥 অ্যাক্টিভ রিটেইলার টার্গেট' : '👥 Active Retailer Target';
+        var conLbl = document.getElementById('target-contractor-label');
+        if (conLbl) conLbl.innerText = isBn ? '🧱 অ্যাক্টিভ কন্ট্রাক্টর টার্গেট' : '🧱 Active Contractor Target';
         var saveBtn = document.getElementById('target-save-btn');
         if (saveBtn) saveBtn.innerText = isBn ? '💾 সেভ' : '💾 Save';
         var salesInp = document.getElementById('target-sales-inp');
         if (salesInp) salesInp.placeholder = isBn ? 'যেমন: 5000' : 'e.g. 5000';
         var collInp = document.getElementById('target-coll-inp');
         if (collInp) collInp.placeholder = isBn ? 'যেমন: 5000000' : 'e.g. 5000000';
+        var retInp = document.getElementById('target-retailer-inp');
+        if (retInp) retInp.placeholder = isBn ? 'যেমন: 50' : 'e.g. 50';
+        var conInp = document.getElementById('target-contractor-inp');
+        if (conInp) conInp.placeholder = isBn ? 'যেমন: 20' : 'e.g. 20';
 
         var mNamesBn = ['','জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
         var mNamesEn = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -9708,9 +9814,9 @@ ${territory}`;
         var thTarget = document.getElementById('th-target');
         if (thTarget) {
             var targetHeaders = isBn
-                ? ['মাস-বছর', 'সেলস টার্গেট', 'কালেকশন টার্গেট', 'মুছুন']
-                : ['Month-Year', 'Sales Target', 'Collection Target', 'Delete'];
-            var aligns = ['left', 'right', 'right', 'center'];
+                ? ['মাস-বছর', 'সেলস টার্গেট', 'কালেকশন টার্গেট', 'রিটেইলার টার্গেট', 'কন্ট্রাক্টর টার্গেট', 'মুছুন']
+                : ['Month-Year', 'Sales Target', 'Collection Target', 'Retailer Target', 'Contractor Target', 'Delete'];
+            var aligns = ['left', 'right', 'right', 'right', 'right', 'center'];
             thTarget.innerHTML = targetHeaders.map(function(h, i) { return '<th style="padding:10px 8px;text-align:' + aligns[i] + ';">' + h + '</th>'; }).join('');
         }
 
@@ -9718,7 +9824,7 @@ ${territory}`;
         var activeT = getActiveMonthlyTarget();
         tbody.innerHTML = '';
         if (targets.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#999;padding:20px;">' + (isBn ? 'এখনো কোনো টার্গেট সেট করা হয়নি' : 'No target has been set yet') + '</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#999;padding:20px;">' + (isBn ? 'এখনো কোনো টার্গেট সেট করা হয়নি' : 'No target has been set yet') + '</td></tr>';
             return;
         }
         targets.forEach(function(t) {
@@ -9727,6 +9833,8 @@ ${territory}`;
                 + '<td style="padding:10px 8px;font-weight:bold;">' + (isActive?'✅ ':'') + mNames[t.month] + ' ' + t.year + '</td>'
                 + '<td style="padding:10px 8px;text-align:right;color:#1a237e;font-weight:bold;">' + (t.salesBags||0).toLocaleString() + (isBn ? ' ব্যাগ' : ' bags') + '</td>'
                 + '<td style="padding:10px 8px;text-align:right;color:#2e7d32;font-weight:bold;">৳' + (t.collAmt||0).toLocaleString() + '</td>'
+                + '<td style="padding:10px 8px;text-align:right;color:#6a1b9a;font-weight:bold;">' + (t.retailerTarget||0).toLocaleString() + '</td>'
+                + '<td style="padding:10px 8px;text-align:right;color:#e65100;font-weight:bold;">' + (t.contractorTarget||0).toLocaleString() + '</td>'
                 + '<td style="padding:10px 8px;text-align:center;"><button onclick="deleteMonthlyTarget('+t.month+','+t.year+')" style="background:#c62828;color:#fff;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;">🗑️</button></td></tr>';
         });
     }
