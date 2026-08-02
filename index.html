@@ -5066,11 +5066,14 @@
         document.getElementById('spd-retailer-mobile').innerText = langData[currentLang].spMobileLbl + ' ' + (ensurePhoneLeadingZero(r.phone) || '-');
         renderSPDSheetInfo(r);
 
-        // ফর্ম রিসেট
+        // ফর্ম রিসেট এবং সরাসরি ওপেন করা (আগের মতো)
         const formSection = document.getElementById('spd-form-section');
-        if (formSection) formSection.style.display = 'none';
+        if (formSection) formSection.style.display = 'block';
         const toggleBtn = document.getElementById('lan-btn-spd-toggle');
-        if (toggleBtn) toggleBtn.innerText = langData[currentLang].btnSpdToggle;
+        if (toggleBtn) {
+            toggleBtn.innerText = langData[currentLang].btnSpdToggleClose || '✖️ Form Close';
+            toggleBtn.style.background = '#c62828';
+        }
         ['spd-date','spd-memo','spd-qty','spd-price','spd-paid','spd-commission','spd-remarks'].forEach(id => {
             const el = document.getElementById(id); if (el) el.value = '';
         });
@@ -6009,8 +6012,7 @@
         const finalPaymentLagbe = paymentLagbeAmt > 0 ? paymentLagbeAmt : 0;
         const requiredCollLac = finalPaymentLagbe > 0 ? ((finalPaymentLagbe / daysLeft) / 100000).toFixed(1) : '0.0';
 
-        // ✅ অ্যাক্টিভ রিটেইলার/কন্ট্রাক্টর টার্গেট — যেদিন রিপোর্ট বানানো হচ্ছে (আজকের তারিখ) পর্যন্ত গণনা
-        const todayStr = localDateStr(refDate);
+        // ✅ অ্যাক্টিভ রিটেইলার/কন্ট্রাক্টর টার্গেট — যেদিন রিপোর্ট বানানো হচ্ছে তার আগের দিন (গতকাল) পর্যন্ত গণনা
         const retailerTargetVal = _at.retailerTarget || 0;
         const contractorTargetVal = _at.contractorTarget || 0;
         const allRetailersForReport = getRetailers();
@@ -6020,7 +6022,7 @@
             const ds = String(d.date).split('T')[0];
             const dParts = ds.split('-');
             if (dParts.length < 3) return false;
-            return parseInt(dParts[1]) === filterMonth && parseInt(dParts[0]) === filterYear && ds <= todayStr;
+            return parseInt(dParts[1]) === filterMonth && parseInt(dParts[0]) === filterYear && ds <= yesterdayStr;
         });
         const retSeenForReport = {};
         deliveriesUpToToday.forEach(function(d) {
@@ -6033,7 +6035,7 @@
             const ds = String(l.date).split('T')[0];
             const dParts = ds.split('-');
             if (dParts.length < 3) return false;
-            return parseInt(dParts[1]) === filterMonth && parseInt(dParts[0]) === filterYear && ds <= todayStr;
+            return parseInt(dParts[1]) === filterMonth && parseInt(dParts[0]) === filterYear && ds <= yesterdayStr;
         });
         const conSeenForReport = {};
         loyaltiesUpToToday.forEach(function(l) { const k = l.masonId || l.name || ''; if (k) conSeenForReport[k] = true; });
@@ -6074,11 +6076,11 @@ Collection- ${collProjLac} Lac
 
 Month: ${monthStr}
 Target Active Retail: ${retailerTargetVal}
-Upto ${formattedToday} Achi: ${activeRetailerCountForReport}
+Upto ${formattedYesterday} Achi: ${activeRetailerCountForReport}
 
 Month: ${monthStr}
 Target Active Contractor: ${contractorTargetVal}
-Upto ${formattedToday} Achi: ${activeContractorCountForReport}
+Upto ${formattedYesterday} Achi: ${activeContractorCountForReport}
 
 Today Tour: ${tourLoc}
 
