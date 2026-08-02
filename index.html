@@ -1774,9 +1774,9 @@
                     <h4 id="lbl-c1">🎯 সেলস টার্গেট</h4>
                     <p id="dash-target">-</p>
                 </div>
-                <div class="card"><h4 id="lbl-c2">-</h4><p id="dash-total-do">-</p></div>
-                <div class="card"><h4 id="lbl-c3">-</h4><p id="dash-total-delivery">-</p></div>
-                <div class="card"><h4 id="lbl-c4">-</h4><p id="dash-stock">-</p></div>
+                <div class="card"><h4 id="lbl-c2">-</h4><p id="dash-total-do">-</p><div id="dash-total-do-breakdown" style="font-size:9px;color:#555;margin-top:3px;">-</div></div>
+                <div class="card"><h4 id="lbl-c3">-</h4><p id="dash-total-delivery">-</p><div id="dash-total-delivery-breakdown" style="font-size:9px;color:#555;margin-top:3px;">-</div></div>
+                <div class="card"><h4 id="lbl-c4">-</h4><p id="dash-stock">-</p><div id="dash-stock-breakdown" style="font-size:9px;color:#555;margin-top:3px;">-</div></div>
                 <div class="card"><h4 id="lbl-c5">-</h4><p id="dash-achievement">-</p></div>
                 <div class="card"><h4 id="lbl-c6">-</h4><p id="dash-days-left">-</p></div>
             </div>
@@ -1802,19 +1802,6 @@
             <div class="card highlight collection-strike">
                 <h4 id="lbl-sr2">⚡ আজকের কালেকশন স্ট্রাইক রেট</h4>
                 <p id="dash-collection-strike-rate" class="strike-rate-value collection-strike-val">-</p>
-            </div>
-        </div>
-        <!-- Active Retailer & Contractor -->
-        <div class="strike-rate-container" style="margin-top:4px;">
-            <div class="card" style="border-top:4px solid #6a1b9a;background:linear-gradient(180deg,#fff 0%,#fdf6ff 100%);">
-                <h4 id="dash-active-retailer-heading" style="color:#6a1b9a;font-size:9px;margin-bottom:6px;">👥 অ্যাক্টিভ রিটেইলার</h4>
-                <p id="dash-active-retailer" class="strike-rate-value" style="color:#6a1b9a;font-size:26px;margin:0;">-</p>
-                <div id="dash-total-retailer" style="font-size:10px;color:#555;margin-top:3px;">-</div>
-            </div>
-            <div class="card" style="border-top:4px solid #e65100;background:linear-gradient(180deg,#fff 0%,#fff8f5 100%);">
-                <h4 id="dash-active-contractor-heading" style="color:#e65100;font-size:9px;margin-bottom:6px;">🧱 অ্যাক্টিভ কন্ট্রাক্টর</h4>
-                <p id="dash-active-contractor" class="strike-rate-value" style="color:#e65100;font-size:26px;margin:0;">-</p>
-                <div id="dash-total-contractor" style="font-size:10px;color:#555;margin-top:3px;">-</div>
             </div>
         </div>
         <!-- অ্যাক্টিভ রিটেইলার/কন্ট্রাক্টর টার্গেট ও অ্যাচিভমেন্ট -->
@@ -9284,6 +9271,10 @@ ${territory}`;
         let totalDOBags = 0;
         let totalDOValue = 0;
         let filteredStockBags = 0;
+        let totalDOBagsFactory = 0;
+        let totalDOBagsGhat = 0;
+        let stockBagsFactory = 0;
+        let stockBagsGhat = 0;
 
         filteredDos.forEach(d => {
             const deliveredFromThisDO = allDeliveries.filter(del => del.doNum === d.doNum).reduce((sum, del) => sum + del.bags, 0);
@@ -9325,6 +9316,14 @@ ${territory}`;
             const displayValue = totalBagDisplay * d.unitPrice;
             // "মোট স্টক" ব্যাজ = এই টেবিলে দেখানো সব DO-এর লাইভ অবশিষ্ট মজুদের যোগফল
             filteredStockBags += stockDoDisplay;
+            // ফ্যাক্টরি/ঘাট অনুযায়ী মোট DO ও স্টক ব্রেকডাউন (dashboard এর ছোট সাব-টেক্সটের জন্য)
+            if (d.location === 'Factory') {
+                totalDOBagsFactory += totalBagDisplay;
+                stockBagsFactory += stockDoDisplay;
+            } else {
+                totalDOBagsGhat += totalBagDisplay;
+                stockBagsGhat += stockDoDisplay;
+            }
             const carryBadge = isCarryDO ? ' <span style="font-size:10px;background:#ff8f00;color:#fff;padding:1px 5px;border-radius:8px;">↩ Carry</span>' : '';
             const rowStyle = isCarryDO ? ' style="background:#fff8e1;"' : '';
             const stockColor = stockDoDisplay <= 0 ? '#c62828' : '#2e7d32';
@@ -9502,10 +9501,13 @@ ${territory}`;
         delTable.innerHTML = '';
         let totalDeliveredBags = 0;
         let totalSalesValue = 0;
+        let totalDeliveredBagsFactory = 0;
+        let totalDeliveredBagsGhat = 0;
 
         deliveries.forEach(del => {
             totalDeliveredBags += del.bags;
             totalSalesValue += (del.bags * del.price);
+            if (del.point === 'Ghat') { totalDeliveredBagsGhat += del.bags; } else { totalDeliveredBagsFactory += del.bags; }
             let displayDelType = del.type === 'PCC' ? (currentLang === 'bn' ? 'PCC (পিসিসি)' : 'PCC') : (currentLang === 'bn' ? 'OPC (ওপিসিসি)' : 'OPC');
             let customerTypePrefix = del.saleType === "Counter" ? "🏪 " : "👥 ";
             let displayLoc = del.point === 'Ghat' ? (currentLang === 'bn' ? '⚓ ঘাট' : '⚓ Ghat') : (currentLang === 'bn' ? '🏭 ফ্যাক্টরি' : '🏭 Factory');
@@ -9566,6 +9568,26 @@ ${territory}`;
         document.getElementById('dash-total-do').innerText = bagsOrTon(totalDOBags, dashUnit);
         document.getElementById('dash-total-delivery').innerText = bagsOrTon(totalDeliveredBags, dashUnit);
         document.getElementById('dash-stock').innerText = bagsOrTon(currentStockBags, dashUnit);
+
+        /* ===== ফ্যাক্টরি/ঘাট অনুযায়ী মোট DO, মোট ডেলিভারি ও স্টক ব্রেকডাউন ===== */
+        (function() {
+            var lblFactory = currentLang === 'bn' ? '🏭 ফ্যাক্টরি' : '🏭 Factory';
+            var lblGhat = currentLang === 'bn' ? '⚓ ঘাট' : '⚓ Ghat';
+
+            var doBreakdownEl = document.getElementById('dash-total-do-breakdown');
+            if (doBreakdownEl) {
+                doBreakdownEl.innerText = lblFactory + ': ' + bagsOrTon(totalDOBagsFactory, dashUnit) + '  |  ' + lblGhat + ': ' + bagsOrTon(totalDOBagsGhat, dashUnit);
+            }
+            var delBreakdownEl = document.getElementById('dash-total-delivery-breakdown');
+            if (delBreakdownEl) {
+                delBreakdownEl.innerText = lblFactory + ': ' + bagsOrTon(totalDeliveredBagsFactory, dashUnit) + '  |  ' + lblGhat + ': ' + bagsOrTon(totalDeliveredBagsGhat, dashUnit);
+            }
+            var stockBreakdownEl = document.getElementById('dash-stock-breakdown');
+            if (stockBreakdownEl) {
+                stockBreakdownEl.innerText = lblFactory + ': ' + bagsOrTon(stockBagsFactory, dashUnit) + '  |  ' + lblGhat + ': ' + bagsOrTon(stockBagsGhat, dashUnit);
+            }
+        })();
+
         document.getElementById('dash-achievement').innerText = convertToLangNum(targetBags > 0 ? Math.round((totalDeliveredBags / targetBags) * 100) : 0) + '%';
         document.getElementById('dash-days-left').innerText = convertToLangNum(daysLeft) + data.suffixDays;
 
