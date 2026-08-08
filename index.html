@@ -1910,6 +1910,21 @@
             </div>
         </div>
 
+        <!-- Team / Report সাব-ট্যাব -->
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <button id="td-tab-btn-team" class="download-btn" style="flex:1;background:#00695c;" onclick="switchTeamDashboardSubTab('team')">👥 Team</button>
+            <button id="td-tab-btn-report" class="download-btn" style="flex:1;background:#37474f;" onclick="switchTeamDashboardSubTab('report')">📊 Report</button>
+        </div>
+
+        <!-- ============ Team ট্যাব: প্রতিটা Jr/Executive/Sr Executive-এর ডিটেইল কার্ড ============ -->
+        <div id="td-team-tab">
+            <div id="td-team-cards-wrap">
+                <p style="text-align:center;color:#888;padding:14px;">ডাটা লোড হচ্ছে...</p>
+            </div>
+        </div>
+
+        <!-- ============ Report ট্যাব: টিমের সামগ্রিক সামারি ============ -->
+        <div id="td-report-tab" style="display:none;">
         <!-- সামারি কার্ড -->
         <div class="dashboard-wrapper">
             <div class="dashboard-column left-col">
@@ -1944,9 +1959,10 @@
         </div>
 
         <div class="download-btn-group" style="margin-top:14px;">
-            <button class="download-btn btn-dl-pdf" onclick="downloadListPdf('team-dashboard-page', true, 'Team_Dashboard', 'download')">📥 PDF</button>
-            <button class="download-btn btn-share-pdf" onclick="downloadListPdf('team-dashboard-page', true, 'Team_Dashboard', 'share')">📤 শেয়ার</button>
+            <button class="download-btn btn-dl-pdf" onclick="downloadListPdf('td-report-tab', true, 'Team_Report', 'download')">📥 PDF</button>
+            <button class="download-btn btn-share-pdf" onclick="downloadListPdf('td-report-tab', true, 'Team_Report', 'share')">📤 শেয়ার</button>
         </div>
+        </div><!-- /td-report-tab -->
     </div>
 
     <div id="report-page" class="page">
@@ -7833,6 +7849,149 @@ ${territory}`;
                 }).join('');
             }
         }
+
+        renderTeamPerformanceCards();
+    }
+
+    /* Team/Report সাব-ট্যাব টগল */
+    function switchTeamDashboardSubTab(tab) {
+        const teamTab = document.getElementById('td-team-tab');
+        const reportTab = document.getElementById('td-report-tab');
+        const btnTeam = document.getElementById('td-tab-btn-team');
+        const btnReport = document.getElementById('td-tab-btn-report');
+        if (tab === 'team') {
+            if (teamTab) teamTab.style.display = 'block';
+            if (reportTab) reportTab.style.display = 'none';
+            if (btnTeam) btnTeam.style.background = '#00695c';
+            if (btnReport) btnReport.style.background = '#37474f';
+            renderTeamPerformanceCards();
+        } else {
+            if (teamTab) teamTab.style.display = 'none';
+            if (reportTab) reportTab.style.display = 'block';
+            if (btnTeam) btnTeam.style.background = '#37474f';
+            if (btnReport) btnReport.style.background = '#00695c';
+        }
+    }
+
+    /* "Team" ট্যাব — প্রতিটা Jr/Executive/Sr Executive-এর ডিটেইল পারফরম্যান্স কার্ড।
+       টার্গেট/অ্যাচিভমেন্ট সবসময় বর্তমান ক্যালেন্ডার মাসের হিসাবে দেখায় (মাসিক টার্গেট
+       ধারণা অনুযায়ী), সেলস/কালেকশনের টোটাল উপরের তারিখ ফিল্টার অনুযায়ী গণনা হয়। */
+    function renderTeamPerformanceCards() {
+        const wrap = document.getElementById('td-team-cards-wrap');
+        if (!wrap) return;
+
+        const teamMeta = getTeamMeta();
+        const startVal = (document.getElementById('td-start-date') || {}).value || '';
+        const endVal   = (document.getElementById('td-end-date')   || {}).value || '';
+        const districtVal  = (document.getElementById('td-district-filter')  || {}).value || '';
+        const territoryVal = (document.getElementById('td-territory-filter') || {}).value || '';
+
+        function inRange(dateStr) {
+            if (!startVal && !endVal) return true;
+            if (!dateStr) return false;
+            const d = normalizeDate ? normalizeDate(dateStr) : dateStr;
+            if (startVal && d < startVal) return false;
+            if (endVal && d > endVal) return false;
+            return true;
+        }
+        function passesLocationFilter(owner) {
+            if (!districtVal && !territoryVal) return true;
+            const meta = teamMeta[owner];
+            if (!meta) return false;
+            if (districtVal && (meta.district || '') !== districtVal) return false;
+            if (territoryVal && (meta.territory || '') !== territoryVal) return false;
+            return true;
+        }
+
+        // শুধু field-entry রোলদের (Jr/Executive/Sr Executive) কার্ড দেখাবে — ASM/ZSM
+        // ইত্যাদি ম্যানেজমেন্ট রোল এই তালিকায় থাকবে না, কারণ তারা ডাটা এন্ট্রি করে না
+        const memberUsernames = Object.keys(teamMeta).filter(function(u) {
+            return isFieldEntryRole(teamMeta[u].role || '') && passesLocationFilter(u);
+        });
+
+        if (!memberUsernames.length) {
+            wrap.innerHTML = '<p style="text-align:center;color:#888;padding:14px;">এই ফিল্টারে কোনো টিম মেম্বার (Jr/Executive/Sr Executive) নেই — Users শীটে District/Territory/ReportsTo ঠিকমতো বসানো আছে কিনা দেখো</p>';
+            return;
+        }
+
+        const allDOs = getDOs();
+        const allDeliveries = getDeliveries();
+        const allPayments = getPayments();
+        const allRetailers = getRetailers();
+        const allLoyalties = getMasonLoyalties();
+        const allTargets = getMonthlyTargets();
+
+        const now = new Date();
+        const curMonth = now.getMonth() + 1;
+        const curYear = now.getFullYear();
+        const daysLeft = getRemainingDaysInMonth();
+        const retailerNameSet = new Set(allRetailers.map(function(r) { return r.name; }));
+
+        // নাম অনুযায়ী সাজানো (নাম না থাকলে Office ID অনুযায়ী)
+        memberUsernames.sort(function(a, b) {
+            const an = (teamMeta[a].empName || a), bn = (teamMeta[b].empName || b);
+            return an.localeCompare(bn);
+        });
+
+        wrap.innerHTML = memberUsernames.map(function(owner) {
+            const meta = teamMeta[owner] || {};
+            const target = allTargets.find(function(t) {
+                return t.month === curMonth && t.year === curYear && (t.owner || '') === owner;
+            }) || { salesBags: 0, collAmt: 0, retailerTarget: 0, contractorTarget: 0 };
+
+            const myDOs = allDOs.filter(function(d) { return d.owner === owner && inRange(d.date); });
+            const myDeliveries = allDeliveries.filter(function(d) { return d.owner === owner && inRange(d.date); });
+            const myPayments = allPayments.filter(function(p) { return p.owner === owner && inRange(p.date); });
+            const myLoyalties = allLoyalties.filter(function(l) { return l.owner === owner; });
+
+            const totalDOBags = myDOs.reduce(function(s, d) { return s + (parseFloat(d.bags) || 0); }, 0);
+            const totalDeliveredBags = myDeliveries.reduce(function(s, d) { return s + (parseFloat(d.bags) || 0); }, 0);
+            const totalCollected = myPayments.reduce(function(s, p) { return s + (parseFloat(p.amount) || 0); }, 0);
+            const stock = totalDOBags - totalDeliveredBags;
+
+            const targetBags = target.salesBags || 0;
+            const achievement = targetBags > 0 ? Math.round((totalDeliveredBags / targetBags) * 100) : 0;
+            const remaining = targetBags - totalDeliveredBags;
+            const strikeRateTxt = remaining > 0
+                ? (convertToLangNum(Math.ceil(remaining / daysLeft)) + (currentLang === 'bn' ? ' ব্যাগ/দিন' : ' Bags/Day'))
+                : (currentLang === 'bn' ? '✅ অর্জিত' : '✅ Achieved');
+
+            const retSeen = {};
+            myDeliveries.forEach(function(d) {
+                if (d.saleType !== 'Counter' && d.buyerName && retailerNameSet.has(d.buyerName)) retSeen[d.buyerName] = true;
+            });
+            const activeRetailerCount = Object.keys(retSeen).length;
+
+            const conSeen = {};
+            myLoyalties.forEach(function(l) { var k = l.masonId || l.name || ''; if (k) conSeen[k] = true; });
+            const activeContractorCount = Object.keys(conSeen).length;
+
+            const collTarget = target.collAmt || 0;
+            const collAchievement = collTarget > 0 ? Math.round((totalCollected / collTarget) * 100) : 0;
+            const requiredPayment = Math.max(0, collTarget - totalCollected);
+
+            const displayName = meta.empName ? (meta.empName + ' (' + owner + ')') : owner;
+            const subLine = [meta.role, meta.district, meta.territory].filter(Boolean).join(' · ');
+
+            return '<div class="card" style="margin-bottom:12px;">' +
+                '<h4 style="margin-bottom:2px;">👤 ' + displayName + '</h4>' +
+                (subLine ? '<p style="font-size:11px;color:#666;margin:0 0 8px;">' + subLine + '</p>' : '') +
+                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12.5px;">' +
+                    '<div>🎯 সেলস টার্গেট<br><b>' + targetBags.toLocaleString('en-BD') + '</b></div>' +
+                    '<div>📄 মোট DO<br><b>' + totalDOBags.toLocaleString('en-BD') + '</b></div>' +
+                    '<div>🚚 মোট ডেলিভারি<br><b>' + totalDeliveredBags.toLocaleString('en-BD') + '</b></div>' +
+                    '<div>📦 স্টক<br><b>' + stock.toLocaleString('en-BD') + '</b></div>' +
+                    '<div>✅ অ্যাচিভমেন্ট<br><b>' + achievement + '%</b></div>' +
+                    '<div>⚡ সেলস স্ট্রাইক রেট<br><b>' + strikeRateTxt + '</b></div>' +
+                    '<div>👥 অ্যাক্টিভ রিটেইলার<br><b>' + activeRetailerCount + ' / ' + (target.retailerTarget || 0) + '</b></div>' +
+                    '<div>🧱 অ্যাক্টিভ কন্ট্রাক্টর<br><b>' + activeContractorCount + ' / ' + (target.contractorTarget || 0) + '</b></div>' +
+                    '<div>💰 কালেকশন টার্গেট<br><b>৳' + collTarget.toLocaleString('en-BD') + '</b></div>' +
+                    '<div>💵 মোট কালেকশন<br><b>৳' + totalCollected.toLocaleString('en-BD') + '</b></div>' +
+                    '<div>📈 কালেকশন অ্যাচিভমেন্ট<br><b>' + collAchievement + '%</b></div>' +
+                    '<div style="color:' + (requiredPayment > 0 ? '#c62828' : '#2e7d32') + ';">🧾 পেমেন্ট লাগবে<br><b>৳' + requiredPayment.toLocaleString('en-BD') + '</b></div>' +
+                '</div>' +
+            '</div>';
+        }).join('');
     }
 
     /* ===================== Google Sheet Sync ===================== */
@@ -7906,6 +8065,7 @@ ${territory}`;
             mason_loyalties:  convertDatesForSheet(getMasonLoyalties()),
             engineers:        getEngineers(),
             ihbs:             getIHBs(),
+            monthly_targets:  getMonthlyTargets(),
             hit_offer_data:   getHitOfferData(),
             bank_loyalty_data:getBankLoyaltyData()
         };
@@ -8135,7 +8295,8 @@ ${territory}`;
         masons: 'masons',
         mason_loyalties: 'mason_loyalties',
         engineers: 'engineers',
-        ihbs: 'ihbs'
+        ihbs: 'ihbs',
+        monthly_targets: 'monthly_targets'
     };
 
     /* hit_offer_data ও bank_loyalty_data অ্যারে নয়, {name: {avgSale,target,reward}} আকারের অবজেক্ট —
@@ -10214,9 +10375,21 @@ ${territory}`;
         var retailerTarget = parseInt(document.getElementById('target-retailer-inp').value) || 0;
         var contractorTarget = parseInt(document.getElementById('target-contractor-inp').value) || 0;
         if (!year || year < 2020 || year > 2099) { alert(currentLang === 'bn' ? 'সঠিক বছর দিন!' : 'Please enter a valid year!'); return; }
+        var myOwner = getAuthUser();
         var targets = getMonthlyTargets();
-        var idx = targets.findIndex(function(t){ return t.month===month && t.year===year; });
-        var entry = { month:month, year:year, salesBags:salesBags, collAmt:collAmt, retailerTarget:retailerTarget, contractorTarget:contractorTarget };
+        // এখন টার্গেট owner-ভিত্তিক (প্রতিটা এক্সিকিউটিভের নিজের টার্গেট আলাদা) — তাই
+        // month+year এর পাশাপাশি owner মিলিয়েও বিদ্যমান এন্ট্রি খোঁজা হয়। পুরনো (owner
+        // ছাড়া) legacy এন্ট্রি থাকলে সেটা এই ইউজারের নিজের বলে গণ্য করে আপডেট করা হয়
+        // (যাতে আগের টার্গেট ডুপ্লিকেট না হয়ে সঠিকভাবে migrate হয়)।
+        var idx = targets.findIndex(function(t){
+            return t.month === month && t.year === year && ((t.owner || '') === myOwner || !t.owner);
+        });
+        var entry = {
+            id: (idx !== -1 && targets[idx].id) ? targets[idx].id : Date.now(),
+            month: month, year: year, salesBags: salesBags, collAmt: collAmt,
+            retailerTarget: retailerTarget, contractorTarget: contractorTarget,
+            owner: myOwner
+        };
         if (idx !== -1) { targets[idx] = entry; } else { targets.push(entry); }
         targets.sort(function(a,b){ return (b.year*12+b.month)-(a.year*12+a.month); });
         localStorage.setItem('monthly_targets', JSON.stringify(targets));
@@ -10231,7 +10404,10 @@ ${territory}`;
 
     function deleteMonthlyTarget(month, year) {
         if (!confirm(currentLang === 'bn' ? 'এই মাসের টার্গেট ডিলিট করবেন?' : 'Delete this month\u2019s target?')) return;
-        var targets = getMonthlyTargets().filter(function(t){ return !(t.month===month && t.year===year); });
+        var myOwner = getAuthUser();
+        var targets = getMonthlyTargets().filter(function(t){
+            return !(t.month === month && t.year === year && ((t.owner || '') === myOwner || !t.owner));
+        });
         localStorage.setItem('monthly_targets', JSON.stringify(targets));
         renderTargetTable();
         updateApp();
@@ -10242,7 +10418,11 @@ ${territory}`;
         var now = new Date();
         var month = (f.month && f.month > 0) ? f.month : (now.getMonth() + 1);
         var year  = (f.year  && f.year  > 0) ? f.year  : now.getFullYear();
-        var found = getMonthlyTargets().find(function(t){ return t.month === month && t.year === year; });
+        var myOwner = getAuthUser();
+        var all = getMonthlyTargets().filter(function(t){ return t.month === month && t.year === year; });
+        // নিজের owner-ট্যাগড টার্গেট অগ্রাধিকার পায়, না থাকলে legacy (owner-বিহীন) এন্ট্রি ব্যবহার হয়
+        var found = all.find(function(t){ return (t.owner || '') === myOwner; }) ||
+                    all.find(function(t){ return !t.owner; });
         return found || { month: month, year: year, salesBags: 0, collAmt: 0, retailerTarget: 0, contractorTarget: 0 };
     }
 
