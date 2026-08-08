@@ -1257,8 +1257,9 @@
 
         <p style="color:#bbb;font-size:11px;margin:16px 0 0;">Cement Distribution Management System</p>
 
-        <!-- প্রথমবার সেটআপের জন্য URL বসানোর অপশন -->
-        <div style="margin-top:12px;">
+        <!-- প্রথমবার সেটআপের জন্য URL বসানোর অপশন — কোম্পানির DEFAULT_GS_SYNC_URL এমবেড করা
+             থাকলে এই বাটন লুকানো থাকবে (showLoginScreen() এ), কারণ নতুন কাউকে URL বসাতে হবে না। -->
+        <div style="margin-top:12px;" id="login-setup-toggle-wrap">
             <button onclick="document.getElementById('login-setup-box').style.display=document.getElementById('login-setup-box').style.display==='none'?'block':'none'"
                 style="background:none;border:1px solid #e0e0e0;color:#888;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;width:100%;">
                 ⚙️ প্রথমবার? Sync URL সেটআপ করুন
@@ -1508,7 +1509,7 @@
             </div>
             <div class="menu-grid">
                 <!-- ড্যাশবোর্ড -->
-                <div class="menu-card card-dash" onclick="switchTab('dashboard-page')">
+                <div class="menu-card card-dash field-only-menu" id="menu-card-dash" onclick="switchTab('dashboard-page')">
                     <div class="menu-card-icon-wrapper">
                         <svg class="menu-card-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <defs>
@@ -1541,8 +1542,20 @@
                     </div>
                     <span class="menu-card-text" id="menu-text-dash">ড্যাশবোর্ড</span>
                 </div>
+                <!-- টিম ড্যাশবোর্ড — শুধু ASM ও উপরের রোলদের জন্য (Jr/Executive/Sr Executive দেখবে না) -->
+                <div class="menu-card" id="menu-card-team-dashboard" style="display:none;background:linear-gradient(135deg,#00695c,#00332c);" onclick="switchTab('team-dashboard-page')">
+                    <div class="menu-card-icon-wrapper">
+                        <svg class="menu-card-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="22" cy="22" r="8" fill="#4dd0e1"/>
+                            <circle cx="42" cy="20" r="7" fill="#80cbc4"/>
+                            <path d="M10 48c0-8 6-13 12-13s12 5 12 13" fill="#26a69a"/>
+                            <path d="M32 48c0-7 5-11 10-11s10 4 10 11" fill="#009688"/>
+                        </svg>
+                    </div>
+                    <span class="menu-card-text" style="color:#fff;" id="menu-text-team-dashboard">টিম ড্যাশবোর্ড</span>
+                </div>
                 <!-- রিপোর্ট -->
-                <div class="menu-card card-report" onclick="switchTab('report-page')">
+                <div class="menu-card card-report field-only-menu" id="menu-card-report" onclick="switchTab('report-page')">
                     <div class="menu-card-icon-wrapper">
                         <svg class="menu-card-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <defs>
@@ -1562,7 +1575,7 @@
                     <span class="menu-card-text" id="menu-text-report">রিপোর্ট</span>
                 </div>
                 <!-- ডিলার -->
-                <div class="menu-card card-dealer" onclick="switchTab('dealer-page')">
+                <div class="menu-card card-dealer field-only-menu" id="menu-card-dealer" onclick="switchTab('dealer-page')">
                     <div class="menu-card-icon-wrapper">
                         <svg class="menu-card-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <defs>
@@ -1586,7 +1599,7 @@
                     <span class="menu-card-text" id="menu-text-dealer">ডিলার</span>
                 </div>
                 <!-- রিটেইলার -->
-                <div class="menu-card card-retailer" onclick="switchTab('retailer-page')">
+                <div class="menu-card card-retailer field-only-menu" id="menu-card-retailer" onclick="switchTab('retailer-page')">
                     <div class="menu-card-icon-wrapper">
                         <svg class="menu-card-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <defs>
@@ -1619,7 +1632,7 @@
                     <span class="menu-card-text" id="menu-text-retailer">রিটেইলার</span>
                 </div>
                 <!-- ডেলিভারি -->
-                <div class="menu-card card-delivery" onclick="switchTab('delivery-page')">
+                <div class="menu-card card-delivery field-only-menu" id="menu-card-delivery" onclick="switchTab('delivery-page')">
                     <div class="menu-card-icon-wrapper">
                         <svg class="menu-card-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <defs>
@@ -1648,7 +1661,7 @@
                     <span class="menu-card-text" id="menu-text-delivery">ডেলিভারি</span>
                 </div>
                 <!-- কন্ট্রাক্টর -->
-                <div class="menu-card card-contractor" onclick="switchTab('mason-page')">
+                <div class="menu-card card-contractor field-only-menu" id="menu-card-contractor" onclick="switchTab('mason-page')">
                     <div class="menu-card-icon-wrapper">
                         <svg class="menu-card-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <defs>
@@ -1678,7 +1691,7 @@
                     <span class="menu-card-text" id="menu-text-contractor">কন্ট্রাক্টর</span>
                 </div>
                 <!-- ইঞ্জিনিয়ার -->
-                <div class="menu-card card-engineer" onclick="switchTab('engineer-page')">
+                <div class="menu-card card-engineer field-only-menu" id="menu-card-engineer" onclick="switchTab('engineer-page')">
                     <div class="menu-card-icon-wrapper">
                         <svg class="menu-card-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <defs>
@@ -1704,7 +1717,7 @@
                     <span class="menu-card-text" id="menu-text-engineer">ইঞ্জিনিয়ার</span>
                 </div>
                 <!-- IHB -->
-                <div class="menu-card card-ihb" onclick="switchTab('ihb-page')">
+                <div class="menu-card card-ihb field-only-menu" id="menu-card-ihb" onclick="switchTab('ihb-page')">
                     <div class="menu-card-icon-wrapper">
                         <svg class="menu-card-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <defs>
@@ -1727,7 +1740,7 @@
                     <span class="menu-card-text" id="menu-text-ihb">IHB</span>
                 </div>
                 <!-- Trash Box -->
-                <div class="menu-card card-trash" onclick="switchTab('trash-page')">
+                <div class="menu-card card-trash field-only-menu" id="menu-card-trash" onclick="switchTab('trash-page')">
                     <div class="menu-card-icon-wrapper">
                         <svg class="menu-card-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <defs>
@@ -1858,6 +1871,71 @@
     </div>
 
     <!-- রিপোর্ট পেজ -->
+    <!-- ============ টিম ড্যাশবোর্ড (ASM ও উপরের রোলদের জন্য, ভিউ-অনলি) ============ -->
+    <div id="team-dashboard-page" class="page">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:15px;">
+            <div class="page-back-bar" onclick="switchTab('home-page')" style="margin-bottom:0;">
+                <span>← হোমে ফিরুন</span>
+            </div>
+        </div>
+        <div style="text-align:center;font-size:15px;font-weight:bold;color:#00332c;background:#e0f2f1;border-radius:8px;padding:9px 14px;margin-bottom:12px;">
+            👥 টিম সামারি — <span id="td-role-badge">-</span> (<span id="td-username-badge">-</span>)
+        </div>
+
+        <!-- তারিখ ফিল্টার -->
+        <div class="card" style="margin-bottom:12px;">
+            <h4 style="margin-bottom:8px;">📅 তারিখ ফিল্টার</h4>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+                <button class="download-btn" style="flex:1;min-width:80px;background:#00695c;" onclick="setTeamDashboardRange('today')">আজ</button>
+                <button class="download-btn" style="flex:1;min-width:80px;background:#00695c;" onclick="setTeamDashboardRange('month')">এই মাস</button>
+                <button class="download-btn" style="flex:1;min-width:80px;background:#00695c;" onclick="setTeamDashboardRange('all')">সব সময়</button>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                <input type="date" id="td-start-date" onchange="refreshTeamDashboard()" style="flex:1;min-width:120px;padding:8px;border:1px solid #ccc;border-radius:6px;">
+                <span>থেকে</span>
+                <input type="date" id="td-end-date" onchange="refreshTeamDashboard()" style="flex:1;min-width:120px;padding:8px;border:1px solid #ccc;border-radius:6px;">
+            </div>
+        </div>
+
+        <!-- সামারি কার্ড -->
+        <div class="dashboard-wrapper">
+            <div class="dashboard-column left-col">
+                <div class="card"><h4>📦 মোট সেলস (ব্যাগ)</h4><p id="td-total-bags">0</p></div>
+                <div class="card"><h4>💰 মোট সেলস ভ্যালু</h4><p id="td-total-sales-value">৳0</p></div>
+            </div>
+            <div class="dashboard-column right-col">
+                <div class="card"><h4>💵 মোট কালেকশন</h4><p id="td-total-collection">৳0</p></div>
+                <div class="card lagbe-card"><h4>🧾 মোট বকেয়া (আনুমানিক)</h4><p id="td-total-due" class="lagbe-value">৳0</p></div>
+            </div>
+        </div>
+
+        <!-- টিম মেম্বার তালিকা -->
+        <div class="card" style="margin-top:12px;">
+            <h4 style="margin-bottom:8px;">👤 টিম মেম্বার — Individual পারফরম্যান্স</h4>
+            <div style="overflow-x:auto;">
+                <table style="width:100%;border-collapse:collapse;font-size:12px;" id="td-team-table">
+                    <thead>
+                        <tr style="background:#e0f2f1;text-align:left;">
+                            <th style="padding:8px;">Office ID</th>
+                            <th style="padding:8px;">সেলস (ব্যাগ)</th>
+                            <th style="padding:8px;">সেলস ভ্যালু</th>
+                            <th style="padding:8px;">কালেকশন</th>
+                            <th style="padding:8px;">বকেয়া</th>
+                        </tr>
+                    </thead>
+                    <tbody id="td-team-table-body">
+                        <tr><td colspan="5" style="padding:10px;text-align:center;color:#888;">ডাটা লোড হচ্ছে...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="download-btn-group" style="margin-top:14px;">
+            <button class="download-btn btn-dl-pdf" onclick="downloadListPdf('team-dashboard-page', true, 'Team_Dashboard', 'download')">📥 PDF</button>
+            <button class="download-btn btn-share-pdf" onclick="downloadListPdf('team-dashboard-page', true, 'Team_Dashboard', 'share')">📤 শেয়ার</button>
+        </div>
+    </div>
+
     <div id="report-page" class="page">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:15px;">
             <div class="page-back-bar" onclick="switchTab('home-page')" style="margin-bottom:0;">
@@ -4339,6 +4417,7 @@
         document.getElementById(pageId).classList.add('active');
         if (pageId !== 'delivery-page') showDeliveryChallan();
         if (pageId === 'user-page') openUserPage();
+        if (pageId === 'team-dashboard-page' && typeof refreshTeamDashboard === 'function') refreshTeamDashboard();
         if (typeof injectGlobalFooters === 'function') injectGlobalFooters();
     }
 
@@ -5449,7 +5528,7 @@
             return;
         }
         const dealerName = document.getElementById('truck-dealer') ? document.getElementById('truck-dealer').value : '';
-        trucks.push({ id: Date.now(), truckNumber, driverName, driverContact, location, dealerName });
+        trucks.push({ id: Date.now(), truckNumber, driverName, driverContact, location, dealerName, owner: getAuthUser() });
         localStorage.setItem('trucks', JSON.stringify(trucks));
         document.getElementById('truck-number').value = '';
         document.getElementById('truck-driver-name').value = '';
@@ -5505,7 +5584,7 @@
         const dos = getDOs();
         if(dos.some(d => d.doNum === doNum)) { alert(currentLang === 'bn'?'এই ডিও নাম্বারটি ইতিমধ্যে আছে!':'DO already exists!'); return; }
         const dealerName = document.getElementById('do-dealer') ? document.getElementById('do-dealer').value : '';
-        dos.push({ id: Date.now(), date, doNum, bags, unitPrice, location, type, payment, dealerName });
+        dos.push({ id: Date.now(), date, doNum, bags, unitPrice, location, type, payment, dealerName, owner: getAuthUser() });
         dos.sort((a,b) => (a.date||'') < (b.date||'') ? -1 : (a.date||'') > (b.date||'') ? 1 : 0);
         localStorage.setItem('dos', JSON.stringify(dos));
         document.getElementById('do-number').value = '';
@@ -5561,7 +5640,7 @@
         const dealerName = document.getElementById('pay-dealer') ? document.getElementById('pay-dealer').value : '';
         if(!date || isNaN(amount)) { alert(currentLang === 'bn'?'সব ফিল্ড পূরণ করুন!':'Fill fields!'); return; }
         const payments = getPayments();
-        payments.push({ id: Date.now(), date, amount, method, note, dealerName });
+        payments.push({ id: Date.now(), date, amount, method, note, dealerName, owner: getAuthUser() });
         payments.sort((a,b) => (a.date||'') < (b.date||'') ? -1 : (a.date||'') > (b.date||'') ? 1 : 0);
         localStorage.setItem('payments', JSON.stringify(payments));
         document.getElementById('pay-amount').value = '';
@@ -5611,7 +5690,7 @@
         const retailers = getRetailers();
         if(retailers.some(r => r.name === name)) { alert(currentLang === 'bn'?'এই রিটেইলার অলরেডি আছে!':'Retailer exists!'); return; }
         const dealerName = document.getElementById('retailer-dealer') ? document.getElementById('retailer-dealer').value : '';
-        retailers.push({ id: Date.now(), name, address, phone, dealerName });
+        retailers.push({ id: Date.now(), name, address, phone, dealerName, owner: getAuthUser() });
         localStorage.setItem('retailers', JSON.stringify(retailers));
         document.getElementById('retailer-name').value = '';
         document.getElementById('retailer-address').value = '';
@@ -5661,7 +5740,7 @@
         const masons = getMasons();
         if(masons.some(m => m.name === name)) { alert(currentLang === 'bn'?'এই কন্ট্রাক্টর অলরেডি আছে!':'Contractor already exists!'); return; }
         const dealerName = document.getElementById('mason-dealer') ? document.getElementById('mason-dealer').value : '';
-        masons.push({ id: Date.now(), crmId, name, address, phone, note, dealerName });
+        masons.push({ id: Date.now(), crmId, name, address, phone, note, dealerName, owner: getAuthUser() });
         localStorage.setItem('masons', JSON.stringify(masons));
         
         document.getElementById('mason-crm-id').value = '';
@@ -5729,7 +5808,8 @@
         const dealerName = document.getElementById('loy-dealer') ? document.getElementById('loy-dealer').value : '';
         const loyalties = getMasonLoyalties();
         loyalties.push({
-            id: Date.now(), date, name, mobile, masonId, ihbName, ihbId, ihbMobile, siteName, siteId, uoId, volume, uoStatus, payStatus, dealerName
+            id: Date.now(), date, name, mobile, masonId, ihbName, ihbId, ihbMobile, siteName, siteId, uoId, volume, uoStatus, payStatus, dealerName,
+            owner: getAuthUser()
         });
         loyalties.sort((a,b) => (a.date||'') < (b.date||'') ? -1 : (a.date||'') > (b.date||'') ? 1 : 0);
         localStorage.setItem('mason_loyalties', JSON.stringify(loyalties));
@@ -5853,7 +5933,7 @@
         const engineers = getEngineers();
         if(engineers.some(e => e.name === name)) { alert(currentLang === 'bn'?'এই Engineer অলরেডি আছে!':'Engineer already exists!'); return; }
         const dealerName = document.getElementById('engineer-dealer') ? document.getElementById('engineer-dealer').value : '';
-        engineers.push({ id: Date.now(), name, address, phone, specialty, dealerName });
+        engineers.push({ id: Date.now(), name, address, phone, specialty, dealerName, owner: getAuthUser() });
         localStorage.setItem('engineers', JSON.stringify(engineers));
         document.getElementById('engineer-name').value = '';
         document.getElementById('engineer-address').value = '';
@@ -5904,7 +5984,7 @@
         if(!name || isNaN(bags)) { alert(currentLang === 'bn' ? 'অনুগ্রহ করে নাম এবং প্রয়োজনীয় ব্যাগ পূরণ করুন!' : 'Fill Name and Required Bags!'); return; }
         const ihbs = getIHBs();
         const dealerName = document.getElementById('ihb-dealer') ? document.getElementById('ihb-dealer').value : '';
-        ihbs.push({ id: Date.now(), crmId, name, address, phone, bags, dealerName });
+        ihbs.push({ id: Date.now(), crmId, name, address, phone, bags, dealerName, owner: getAuthUser() });
         localStorage.setItem('ihbs', JSON.stringify(ihbs));
 
         document.getElementById('ihb-crm-id').value = '';
@@ -6252,7 +6332,8 @@ ${territory}`;
         const dealerName = document.getElementById('del-dealer') ? document.getElementById('del-dealer').value : '';
         deliveries.push({
             id: Date.now(), date, doNum, type: selectedDo.type, point, truck,
-            driverName, driverMobile, price, bags, saleType, buyerName, counterCustomer, dealerName
+            driverName, driverMobile, price, bags, saleType, buyerName, counterCustomer, dealerName,
+            owner: getAuthUser()
         });
         deliveries.sort((a,b) => (a.date||'') < (b.date||'') ? -1 : (a.date||'') > (b.date||'') ? 1 : 0);
         localStorage.setItem('deliveries', JSON.stringify(deliveries));
@@ -7340,6 +7421,23 @@ ${territory}`;
 
     function getAuthToken() { return localStorage.getItem(AUTH_TOKEN_KEY) || ''; }
     function getAuthRole()  { return localStorage.getItem(AUTH_ROLE_KEY)  || ''; }
+    function getAuthUser()  { return localStorage.getItem(AUTH_USER_KEY)  || ''; }
+
+    /* যেসব রোল ডাটা-এন্ট্রি করে (field roles) — Jr Executive / Executive / Sr Executive।
+       এই তিনটাই একমাত্র রোল যাদের এই HTML অ্যাপে ফুল এন্ট্রি অ্যাক্সেস থাকবে।
+       ASM ও তার উপরের সব রোল ভিউ-অনলি (Team Dashboard)। */
+    const FIELD_ENTRY_ROLES = ['jrexecutive', 'executive', 'srexecutive'];
+    function normalizeRoleStr(r) { return String(r || '').trim().toLowerCase().replace(/[\s_-]+/g, ''); }
+    function isFieldEntryRole(role) { return FIELD_ENTRY_ROLES.indexOf(normalizeRoleStr(role)) !== -1; }
+    /* backward-compat: পুরনো 'admin'/'viewer' রোল বা রোল খালি থাকলে পুরনো আচরণ (ফুল এন্ট্রি) বজায় রাখা হয় */
+    function hasEntryAccess() {
+        const role = getAuthRole();
+        if (!role) return true;
+        const nr = normalizeRoleStr(role);
+        if (nr === 'admin') return true;
+        if (nr === 'viewer') return false;
+        return isFieldEntryRole(role);
+    }
 
     /* Login screen দেখাও */
     function showLoginScreen() {
@@ -7353,6 +7451,10 @@ ${territory}`;
         const savedUrl = localStorage.getItem(GS_SYNC_URL_KEY) || '';
         const setupUrl = document.getElementById('login-setup-url');
         if (setupUrl) setupUrl.value = savedUrl;
+        // DEFAULT_GS_SYNC_URL এমবেড করা থাকলে নতুন ইউজারকে URL সেটআপ বাটনই দেখানো
+        // হবে না — শুধু Office ID/Password দিয়ে সরাসরি লগইন করলেই চলবে
+        const toggleWrap = document.getElementById('login-setup-toggle-wrap');
+        if (toggleWrap) toggleWrap.style.display = DEFAULT_GS_SYNC_URL ? 'none' : 'block';
         setTimeout(function() { document.getElementById('login-username').focus(); }, 100);
     }
 
@@ -7374,6 +7476,12 @@ ${territory}`;
                 applyRoleBasedUI();
                 updateApp();
                 if (typeof injectGlobalFooters === 'function') injectGlobalFooters();
+                // লগইনের পর ডাটা নিজে থেকে (ম্যানুয়াল রিস্টোর ছাড়াই) role/hierarchy
+                // অনুযায়ী লোড হওয়ার জন্য — নীরবে, ব্যাকগ্রাউন্ডে
+                silentAutoRestoreOnLogin().then(function() {
+                    updateApp();
+                    if (typeof refreshTeamDashboard === 'function') refreshTeamDashboard();
+                });
             });
         });
     }
@@ -7410,7 +7518,7 @@ ${territory}`;
             return;
         }
 
-        const url = localStorage.getItem(GS_SYNC_URL_KEY);
+        const url = getEffectiveSyncUrl();
         if (!url) {
             /* URL নেই — offline mode: hardcoded admin check */
             errEl.innerText = 'Sync URL সেট নেই। Settings থেকে URL দিন।';
@@ -7456,7 +7564,7 @@ ${territory}`;
     /* App শুরুতে token যাচাই */
     async function checkAuthOnLoad() {
         const token = getAuthToken();
-        const url   = localStorage.getItem(GS_SYNC_URL_KEY);
+        const url   = getEffectiveSyncUrl();
 
         if (!token) { showLoginScreen(); return; }
         if (!url)   { showApp(); return; }
@@ -7512,21 +7620,46 @@ ${territory}`;
         alert(currentLang === 'bn' ? '✅ সেটিংস সেভ হয়েছে।' : '✅ Settings saved.');
     }
 
-    /* Viewer হলে edit/add/delete বাটনগুলো hide করো */
+    /* Viewer/ASM+ হলে edit/add/delete বাটনগুলো hide করো, এবং non-field রোলদের জন্য
+       এন্ট্রি-মেনু লুকিয়ে টিম ড্যাশবোর্ড দেখাও */
     function applyRoleBasedUI() {
         const role = getAuthRole();
-        // শুধু explicitly 'viewer' হলেই hide করো
-        if (role !== 'viewer') return;
+        const fieldRole = hasEntryAccess(); // Jr/Executive/Sr Executive (বা admin/খালি রোল, ব্যাকওয়ার্ড কম্প্যাটিবিলিটি)
 
-        // Viewer — শুধু ⋮ action menu (edit/delete) এবং sync লুকাও
-        // form toggle বাটন লুকাবো না — viewer data দেখতে পারবে কিন্তু save করলে কাজ হবে না
+        if (!fieldRole) {
+            // ASM ও তার উপরের সব রোল — ভিউ-অনলি টিম ড্যাশবোর্ড মোড
+            document.querySelectorAll('.field-only-menu').forEach(function(el) { el.style.display = 'none'; });
+            const tdCard = document.getElementById('menu-card-team-dashboard');
+            if (tdCard) tdCard.style.display = 'flex';
+
+            document.querySelectorAll('.three-dot-btn').forEach(function(el) { el.style.display = 'none'; });
+            const syncBtn = document.getElementById('gs-sync-btn');
+            if (syncBtn) syncBtn.style.display = 'none';
+            document.querySelectorAll('.submit-btn, .btn-primary').forEach(function(el) {
+                el.disabled = true;
+                el.style.opacity = '0.5';
+                el.title = 'এই রোলে এন্ট্রি করার permission নেই — শুধু রিপোর্ট দেখা যাবে';
+            });
+
+            // হোম না দেখিয়ে সরাসরি টিম ড্যাশবোর্ডে নিয়ে যাও
+            document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+            const tdPage = document.getElementById('team-dashboard-page');
+            if (tdPage) tdPage.classList.add('active');
+            if (typeof refreshTeamDashboard === 'function') refreshTeamDashboard();
+            return;
+        }
+
+        // Field-entry রোল (Jr/Executive/Sr Executive) — টিম ড্যাশবোর্ড কার্ড লুকাও, বাকি সব আগের মতো
+        const tdCard = document.getElementById('menu-card-team-dashboard');
+        if (tdCard) tdCard.style.display = 'none';
+
+        // শুধু explicitly 'viewer' হলেই বাকি hide করো (আগের আচরণ অপরিবর্তিত)
+        if (normalizeRoleStr(role) !== 'viewer') return;
         document.querySelectorAll('.three-dot-btn').forEach(function(el) {
             el.style.display = 'none';
         });
-        const syncBtn = document.getElementById('gs-sync-btn');
-        if (syncBtn) syncBtn.style.display = 'none';
-
-        // সব submit বাটন disable করো (form দেখা যাবে কিন্তু save হবে না)
+        const syncBtn2 = document.getElementById('gs-sync-btn');
+        if (syncBtn2) syncBtn2.style.display = 'none';
         document.querySelectorAll('.submit-btn, .btn-primary').forEach(function(el) {
             el.disabled = true;
             el.style.opacity = '0.5';
@@ -7534,9 +7667,119 @@ ${territory}`;
         });
     }
 
+    /* ===================== Team Dashboard (ASM ও উপরে) ===================== */
+    function setTeamDashboardRange(preset) {
+        const s = document.getElementById('td-start-date');
+        const e = document.getElementById('td-end-date');
+        if (!s || !e) return;
+        const today = new Date();
+        const fmt = function(d) { return d.toISOString().slice(0, 10); };
+        if (preset === 'today') {
+            s.value = fmt(today); e.value = fmt(today);
+        } else if (preset === 'month') {
+            const first = new Date(today.getFullYear(), today.getMonth(), 1);
+            s.value = fmt(first); e.value = fmt(today);
+        } else { // all
+            s.value = ''; e.value = '';
+        }
+        refreshTeamDashboard();
+    }
+
+    function refreshTeamDashboard() {
+        const tdPage = document.getElementById('team-dashboard-page');
+        if (!tdPage) return; // পেজ এখনো DOM-এ না থাকলে চুপচাপ থামো
+
+        const roleBadge = document.getElementById('td-role-badge');
+        const userBadge = document.getElementById('td-username-badge');
+        if (roleBadge) roleBadge.innerText = getAuthRole() || '-';
+        if (userBadge) userBadge.innerText = getAuthUser() || '-';
+
+        const startVal = (document.getElementById('td-start-date') || {}).value || '';
+        const endVal   = (document.getElementById('td-end-date')   || {}).value || '';
+
+        function inRange(dateStr) {
+            if (!startVal && !endVal) return true;
+            if (!dateStr) return false;
+            const d = normalizeDate ? normalizeDate(dateStr) : dateStr;
+            if (startVal && d < startVal) return false;
+            if (endVal && d > endVal) return false;
+            return true;
+        }
+
+        const deliveries = getDeliveries().filter(function(r) { return inRange(r.date); });
+        const payments = getPayments().filter(function(r) { return inRange(r.date); });
+
+        // owner (Office ID) অনুযায়ী গ্রুপ করো — restoreAll ইতিমধ্যে role/hierarchy অনুযায়ী
+        // ফিল্টার করা ডাটাই পাঠায়, তাই এখানে যা আছে তার পুরোটাই এই ইউজারের দেখার অধিকার আছে
+        const byOwner = {};
+        function ensureOwner(o) {
+            const key = o || '(অজানা/পুরনো এন্ট্রি)';
+            if (!byOwner[key]) byOwner[key] = { bags: 0, salesValue: 0, collection: 0 };
+            return byOwner[key];
+        }
+
+        let totalBags = 0, totalSalesValue = 0, totalCollection = 0;
+        deliveries.forEach(function(d) {
+            const bags = parseFloat(d.bags) || 0;
+            const price = parseFloat(d.price) || 0;
+            const val = bags * price;
+            totalBags += bags;
+            totalSalesValue += val;
+            const rec = ensureOwner(d.owner);
+            rec.bags += bags;
+            rec.salesValue += val;
+        });
+        payments.forEach(function(p) {
+            const amt = parseFloat(p.amount) || 0;
+            totalCollection += amt;
+            const rec = ensureOwner(p.owner);
+            rec.collection += amt;
+        });
+        const totalDue = totalSalesValue - totalCollection;
+
+        const elBags = document.getElementById('td-total-bags');
+        const elSalesVal = document.getElementById('td-total-sales-value');
+        const elColl = document.getElementById('td-total-collection');
+        const elDue = document.getElementById('td-total-due');
+        if (elBags) elBags.innerText = totalBags.toLocaleString('en-BD');
+        if (elSalesVal) elSalesVal.innerText = '৳' + totalSalesValue.toLocaleString('en-BD');
+        if (elColl) elColl.innerText = '৳' + totalCollection.toLocaleString('en-BD');
+        if (elDue) elDue.innerText = '৳' + totalDue.toLocaleString('en-BD');
+
+        const tbody = document.getElementById('td-team-table-body');
+        if (tbody) {
+            const owners = Object.keys(byOwner).sort(function(a, b) { return byOwner[b].salesValue - byOwner[a].salesValue; });
+            if (!owners.length) {
+                tbody.innerHTML = '<tr><td colspan="5" style="padding:10px;text-align:center;color:#888;">এই রেঞ্জে কোনো ডাটা নেই</td></tr>';
+            } else {
+                tbody.innerHTML = owners.map(function(o) {
+                    const r = byOwner[o];
+                    const due = r.salesValue - r.collection;
+                    return '<tr style="border-bottom:1px solid #eee;">' +
+                        '<td style="padding:8px;font-weight:600;">' + o + '</td>' +
+                        '<td style="padding:8px;">' + r.bags.toLocaleString('en-BD') + '</td>' +
+                        '<td style="padding:8px;">৳' + r.salesValue.toLocaleString('en-BD') + '</td>' +
+                        '<td style="padding:8px;">৳' + r.collection.toLocaleString('en-BD') + '</td>' +
+                        '<td style="padding:8px;color:' + (due > 0 ? '#c62828' : '#2e7d32') + ';">৳' + due.toLocaleString('en-BD') + '</td>' +
+                        '</tr>';
+                }).join('');
+            }
+        }
+    }
+
     /* ===================== Google Sheet Sync ===================== */
     const GS_SYNC_URL_KEY = 'gs_sync_url';
     const GS_SYNC_AUTO_KEY = 'gs_sync_auto';
+
+    /* কোম্পানির একটাই Google Apps Script Web App URL — এখানে বসিয়ে দিলে নতুন কোনো
+       ইউজারকে আর ম্যানুয়ালি Sync URL বসাতে হবে না, শুধু Office ID + Password দিয়ে
+       সরাসরি লগইন করলেই চলবে। Deploy > New deployment থেকে পাওয়া Web App URL-টা
+       নিচের '' এর জায়গায় বসান (যেমন: 'https://script.google.com/macros/s/AKfycb.../exec')। */
+    const DEFAULT_GS_SYNC_URL = '';
+
+    function getEffectiveSyncUrl() {
+        return localStorage.getItem(GS_SYNC_URL_KEY) || DEFAULT_GS_SYNC_URL || '';
+    }
 
     function openSyncSettings() {
         document.getElementById('gs-sync-url-input').value = localStorage.getItem(GS_SYNC_URL_KEY) || '';
@@ -7608,7 +7851,7 @@ ${territory}`;
     }
 
     async function syncAllToGoogleSheet(silent) {
-        const url = localStorage.getItem(GS_SYNC_URL_KEY);
+        const url = getEffectiveSyncUrl();
         if (!url) {
             if (!silent) {
                 alert(currentLang === 'bn' ? 'প্রথমে ⚙️ আইকনে চেপে Google Sheet Sync URL সেট করুন।' : 'Please set your Google Sheet Sync URL first by tapping ⚙️.');
@@ -7810,7 +8053,7 @@ ${territory}`;
     }
 
     function autoSyncIfEnabled() {
-        if (localStorage.getItem(GS_SYNC_AUTO_KEY) === 'true' && localStorage.getItem(GS_SYNC_URL_KEY)) {
+        if (localStorage.getItem(GS_SYNC_AUTO_KEY) === 'true' && getEffectiveSyncUrl()) {
             syncAllToGoogleSheet(true);
         }
     }
@@ -7836,7 +8079,7 @@ ${territory}`;
     };
 
     async function restoreFromGoogleSheet(mode) {
-        const url = localStorage.getItem(GS_SYNC_URL_KEY);
+        const url = getEffectiveSyncUrl();
         if (!url) {
             alert(currentLang === 'bn' ? 'প্রথমে Google Sheet Sync URL সেট ও সেভ করুন।' : 'Please set and save your Google Sheet Sync URL first.');
             return;
@@ -7853,7 +8096,35 @@ ${territory}`;
                 : '🔀 Merge Restore: Only new/missing data from Google Sheet will be added. Nothing will be deleted. Continue?');
 
         if (!confirm(confirmMsg)) return;
+        await performRestoreCore(mode, false);
+    }
 
+    /* লগইনের পর অটোমেটিক, নীরব (silent) রিস্টোর — কোনো confirm/alert দেখায় না,
+       ব্যর্থ হলেও চুপচাপ থামে (যাতে লগইন ফ্লো আটকে না যায়; ইউজার চাইলে ম্যানুয়ালি
+       Settings > Restore থেকে আবার চেষ্টা করতে পারবে)।
+       ডাটা-লস এড়ানোর জন্য দুই ধাপে করা হয়:
+       ১) আগে এই ডিভাইসের ডাটা শীটে push করা হয় (silent sync) — যদি কোনো এন্ট্রি
+          এখনো সিঙ্ক না হয়ে থাকে (auto-sync অফ থাকলে), সেটা যেন restore-এ হারিয়ে না যায়।
+       ২) তারপর 'merge' মোডে restore করা হয় — merge কখনো লোকাল ডাটা মোছে না, শুধু
+          নতুন/মিসিং রেকর্ড (এই ইউজারের role/hierarchy অনুযায়ী যা যা দেখার অধিকার আছে) যোগ করে।
+       (ইচ্ছাকৃতভাবে 'full' মোড ব্যবহার করা হয়নি, কারণ full মোড ডিভাইসের ডাটা রিপ্লেস করে দেয় —
+       তাতে কোনো এন্ট্রি সিঙ্কের আগেই হারানোর ঝুঁকি থাকে।) */
+    async function silentAutoRestoreOnLogin() {
+        const url = getEffectiveSyncUrl();
+        if (!url || !getAuthToken()) return;
+        try {
+            await syncAllToGoogleSheet(true);
+        } catch (e) { /* push ব্যর্থ হলেও restore চেষ্টা চালিয়ে যাও */ }
+        try {
+            await performRestoreCore('merge', true);
+        } catch (e) {
+            /* silent fail — নেটওয়ার্ক না থাকলে ক্যাশড লোকাল ডাটা নিয়েই অ্যাপ চলবে */
+        }
+    }
+
+    async function performRestoreCore(mode, silent) {
+        const url = getEffectiveSyncUrl();
+        const isFull = (mode === 'full');
         try {
             const sep = url.includes('?') ? '&' : '?';
             const res = await fetch(url + sep + 'action=restoreAll&token=' + encodeURIComponent(getAuthToken()), { method: 'GET' });
@@ -7953,20 +8224,27 @@ ${territory}`;
                 }
             }
 
-            closeSyncSettings();
+            if (!silent) closeSyncSettings();
             updateApp();
+            if (typeof refreshTeamDashboard === 'function') refreshTeamDashboard();
 
-            const doneMsg = isFull
-                ? (currentLang === 'bn'
-                    ? `✅ ফুল রিস্টোর সম্পন্ন! ${totalAdded}টি রেকর্ড লোড হয়েছে।`
-                    : `✅ Full restore complete! ${totalAdded} records loaded.`)
-                : (currentLang === 'bn'
-                    ? `✅ মার্জ সম্পন্ন! ${totalAdded}টি নতুন রেকর্ড যোগ হয়েছে। আগের সব ডাটা অক্ষত আছে।`
-                    : `✅ Merge complete! ${totalAdded} new record(s) added. All existing data preserved.`);
-            alert(doneMsg);
+            if (!silent) {
+                const doneMsg = isFull
+                    ? (currentLang === 'bn'
+                        ? `✅ ফুল রিস্টোর সম্পন্ন! ${totalAdded}টি রেকর্ড লোড হয়েছে।`
+                        : `✅ Full restore complete! ${totalAdded} records loaded.`)
+                    : (currentLang === 'bn'
+                        ? `✅ মার্জ সম্পন্ন! ${totalAdded}টি নতুন রেকর্ড যোগ হয়েছে। আগের সব ডাটা অক্ষত আছে।`
+                        : `✅ Merge complete! ${totalAdded} new record(s) added. All existing data preserved.`);
+                alert(doneMsg);
+            }
 
         } catch (err) {
-            alert((currentLang === 'bn' ? 'ডাটা আনতে সমস্যা হয়েছে: ' : 'Failed to restore: ') + err.message);
+            if (!silent) {
+                alert((currentLang === 'bn' ? 'ডাটা আনতে সমস্যা হয়েছে: ' : 'Failed to restore: ') + err.message);
+            } else {
+                throw err;
+            }
         }
     }
     /* =================== End Google Sheet Sync =================== */
@@ -9086,12 +9364,12 @@ ${territory}`;
     function openDesignationManagePopup() {
         closeAllMenus();
         document.getElementById('designation-manage-popup').classList.add('show');
-        r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8();
+        rahJ91ZuNL8Y2px8iYciYeHN8sfSh5eXH8();
     }
     function closeDesignationManagePopup() {
         document.getElementById('designation-manage-popup').classList.remove('show');
     }
-    function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
+    function rahJ91ZuNL8Y2px8iYciYeHN8sfSh5eXH8() {
         const box = document.getElementById('designation-manage-list');
         if (!box) return;
         const list = getDesignations();
@@ -9119,14 +9397,14 @@ ${territory}`;
         list[idx] = list[newIdx];
         list[newIdx] = tmp;
         saveDesignations(list);
-        r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8();
+        rahJ91ZuNL8Y2px8iYciYeHN8sfSh5eXH8();
         renderDesignationSelectOptions();
     }
     function deleteDesignationItem(name) {
         if (!confirm((currentLang === 'bn' ? '"' + name + '" ডিলিট করতে চান?' : 'Delete "' + name + '"?'))) return;
         const list = getDesignations().filter(function(n) { return n !== name; });
         saveDesignations(list);
-        r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8();
+        rahJ91ZuNL8Y2px8iYciYeHN8sfSh5eXH8();
         renderDesignationSelectOptions();
     }
     function addNewDesignation() {
@@ -9141,7 +9419,7 @@ ${territory}`;
         list.push(name);
         saveDesignations(list);
         inp.value = '';
-        r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8();
+        rahJ91ZuNL8Y2px8iYciYeHN8sfSh5eXH8();
         renderDesignationSelectOptions();
     }
     /* ============================================================ */
