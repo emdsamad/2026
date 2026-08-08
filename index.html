@@ -3770,27 +3770,50 @@
        Users শীট থেকে আসা team_meta অনুযায়ী লগইন হওয়ার সাথে সাথেই অটোমেটিক আপডেট
        হয়ে যায়: Name <- EmpName, Designation <- Role, Territory <- Territory কলাম।
        (⋮ মেনুর ✏️ Edit দিয়ে ইউজার চাইলে সাময়িকভাবে ওভাররাইড করতে পারবে, তবে পরের
-       লগইনে আবার Users শীটের সাম্প্রতিক ডাটা দিয়েই রিফ্রেশ হয়ে যাবে) */
+       লগইনে আবার Users শীটের সাম্প্রতিক ডাটা দিয়েই রিফ্রেশ হয়ে যাবে)
+
+       ⚠️ এটা কাজ করার পূর্বশর্ত: ব্যাকএন্ডের team_meta রেসপন্সে লগইন করা ইউজারের
+       *নিজের* রেকর্ড (শুধু তার অধস্তনদের না) empName/role/territory সহ থাকতে হবে।
+       না থাকলে Name/Territory ফাঁকা থেকে যাবে — Designation তবুও দেখা যাবে কারণ
+       সেটা লগইন রেসপন্সের role থেকে ফলব্যাক হিসেবে বসে। */
     function applyLoginProfileFromTeamMeta() {
         const authUser = getAuthUser();
         if (!authUser) return;
         const teamMeta = getTeamMeta();
-        const own = teamMeta[authUser];
-        if (!own) return;
-        if (own.empName) {
-            localStorage.setItem('app_profile_name', own.empName);
+
+        // key-তে সামান্য case/space তফাত থাকলেও (ব্যাকএন্ডের ডাটা এন্ট্রি ভুলের কারণে)
+        // যেন মিলে যায়, তাই একটা কেস-ইনসেনসিটিভ/ট্রিম ফলব্যাক লুকআপও রাখা হলো
+        let own = teamMeta[authUser];
+        if (!own) {
+            const wantedKey = authUser.trim().toLowerCase();
+            const foundKey = Object.keys(teamMeta).find(function(k) { return k.trim().toLowerCase() === wantedKey; });
+            if (foundKey) own = teamMeta[foundKey];
+        }
+        if (!own) {
+            console.warn('[Profile Header] team_meta-তে "' + authUser + '" এর নিজের রেকর্ড পাওয়া যায়নি। ব্যাকএন্ডের teamMeta রেসপন্সে এই লগইন-ইউজারের নিজের এন্ট্রি (empName/role/district/territory সহ) পাঠানো হচ্ছে কিনা চেক করুন। বর্তমান team_meta:', teamMeta);
+        }
+
+        const nameVal = (own && own.empName) ? own.empName : '';
+        // Designation: team_meta-তে own.role থাকলে সেটাই, না থাকলে লগইন রেসপন্সের
+        // role (AUTH_ROLE_KEY) ফলব্যাক হিসেবে — এভাবে team_meta না এলেও অন্তত
+        // Designation ফাঁকা থাকবে না
+        const desgVal = (own && own.role) ? own.role : (getAuthRole() || '');
+        const terrVal = (own && own.territory) ? own.territory : '';
+
+        if (nameVal) {
+            localStorage.setItem('app_profile_name', nameVal);
             const el = document.getElementById('val-profile-name');
-            if (el) el.innerText = own.empName;
+            if (el) el.innerText = nameVal;
         }
-        if (own.role) {
-            localStorage.setItem('app_profile_desg', own.role);
+        if (desgVal) {
+            localStorage.setItem('app_profile_desg', desgVal);
             const el = document.getElementById('val-profile-desg');
-            if (el) el.innerText = own.role;
+            if (el) el.innerText = desgVal;
         }
-        if (own.territory) {
-            localStorage.setItem('app_profile_territory', own.territory);
+        if (terrVal) {
+            localStorage.setItem('app_profile_territory', terrVal);
             const el = document.getElementById('val-profile-territory');
-            if (el) el.innerText = own.territory;
+            if (el) el.innerText = terrVal;
         }
     }
 
