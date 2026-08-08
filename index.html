@@ -1411,6 +1411,7 @@
             <div class="filter-active-badge-popup" id="global-filter-badge"></div>
             <div id="filter-row2"></div>
             <div id="dealer-filter-section" style="margin-top:14px;"></div>
+            <div id="location-filter-section" style="margin-top:14px;display:none;"></div>
             <button class="filter-clear-popup-btn" onclick="clearGlobalFilter()">✕ <span id="lbl-filter-clear">সব দেখাও (ফিল্টার মুছুন)</span></button>
         </div>
     </div>
@@ -1553,6 +1554,38 @@
                         </svg>
                     </div>
                     <span class="menu-card-text" style="color:#fff;" id="menu-text-team-dashboard">টিম ড্যাশবোর্ড</span>
+                </div>
+                <!-- Team কার্ড — সরাসরি টিম ড্যাশবোর্ডের Team সাব-ট্যাবে নিয়ে যায় (শুধু ASM ও উপরে) -->
+                <div class="menu-card" id="menu-card-team-subtab" style="display:none;background:linear-gradient(135deg,#26a69a,#00695c);" onclick="openTeamDashboardTab('team')">
+                    <div class="menu-card-icon-wrapper">
+                        <svg class="menu-card-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="22" cy="22" r="8" fill="#4dd0e1"/>
+                            <circle cx="42" cy="20" r="7" fill="#80cbc4"/>
+                            <path d="M10 48c0-8 6-13 12-13s12 5 12 13" fill="#26a69a"/>
+                            <path d="M32 48c0-7 5-11 10-11s10 4 10 11" fill="#009688"/>
+                        </svg>
+                    </div>
+                    <span class="menu-card-text" style="color:#fff;" id="menu-text-team-subtab">Team</span>
+                </div>
+                <!-- Report কার্ড — সরাসরি টিম ড্যাশবোর্ডের Report সাব-ট্যাবে নিয়ে যায় (শুধু ASM ও উপরে) -->
+                <div class="menu-card" id="menu-card-team-report-subtab" style="display:none;background:linear-gradient(135deg,#009688,#004d40);" onclick="openTeamDashboardTab('report')">
+                    <div class="menu-card-icon-wrapper">
+                        <svg class="menu-card-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="repGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#009688"/>
+                                    <stop offset="100%" stop-color="#004d40"/>
+                                </linearGradient>
+                            </defs>
+                            <rect x="16" y="10" width="32" height="44" rx="6" fill="url(#repGrad2)" filter="url(#clayShadow)"/>
+                            <rect x="22" y="18" width="20" height="4" rx="2" fill="#e0f2f1" opacity="0.8"/>
+                            <rect x="22" y="28" width="20" height="3" rx="1.5" fill="#e0f2f1" opacity="0.6"/>
+                            <rect x="22" y="36" width="14" height="3" rx="1.5" fill="#e0f2f1" opacity="0.6"/>
+                            <circle cx="40" cy="42" r="6" fill="#fbbf24" filter="url(#clayShadow)"/>
+                            <path d="M39 40 l2 2 l3 -3" stroke="#004d40" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <span class="menu-card-text" style="color:#fff;" id="menu-text-team-report-subtab">Report</span>
                 </div>
                 <!-- রিপোর্ট -->
                 <div class="menu-card card-report field-only-menu" id="menu-card-report" onclick="switchTab('report-page')">
@@ -1890,23 +1923,10 @@
                 <button class="download-btn" style="flex:1;min-width:80px;background:#00695c;" onclick="setTeamDashboardRange('month')">এই মাস</button>
                 <button class="download-btn" style="flex:1;min-width:80px;background:#00695c;" onclick="setTeamDashboardRange('all')">সব সময়</button>
             </div>
-            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-                <input type="date" id="td-start-date" onchange="refreshTeamDashboard()" style="flex:1;min-width:120px;padding:8px;border:1px solid #ccc;border-radius:6px;">
-                <span>থেকে</span>
-                <input type="date" id="td-end-date" onchange="refreshTeamDashboard()" style="flex:1;min-width:120px;padding:8px;border:1px solid #ccc;border-radius:6px;">
-            </div>
-        </div>
-
-        <!-- District/Territory ফিল্টার — টিম মেম্বারদের Users শীট প্রোফাইল থেকে -->
-        <div class="card" style="margin-bottom:12px;">
-            <h4 style="margin-bottom:8px;">📍 District / Territory ফিল্টার</h4>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <select id="td-district-filter" onchange="onTeamDistrictFilterChange()" style="flex:1;min-width:130px;padding:8px;border:1px solid #ccc;border-radius:6px;">
-                    <option value="">সব District</option>
-                </select>
-                <select id="td-territory-filter" onchange="refreshTeamDashboard()" style="flex:1;min-width:130px;padding:8px;border:1px solid #ccc;border-radius:6px;">
-                    <option value="">সব Territory</option>
-                </select>
+            <div style="display:flex;gap:4px;align-items:center;flex-wrap:nowrap;">
+                <input type="date" id="td-start-date" onchange="refreshTeamDashboard()" style="flex:1;min-width:0;padding:6px 4px;font-size:13px;border:1px solid #ccc;border-radius:6px;">
+                <span style="font-size:12px;color:#666;flex-shrink:0;">থেকে</span>
+                <input type="date" id="td-end-date" onchange="refreshTeamDashboard()" style="flex:1;min-width:0;padding:6px 4px;font-size:13px;border:1px solid #ccc;border-radius:6px;">
             </div>
         </div>
 
@@ -7646,6 +7666,10 @@ ${territory}`;
             document.querySelectorAll('.field-only-menu').forEach(function(el) { el.style.display = 'none'; });
             const tdCard = document.getElementById('menu-card-team-dashboard');
             if (tdCard) tdCard.style.display = 'flex';
+            const teamSubCard = document.getElementById('menu-card-team-subtab');
+            if (teamSubCard) teamSubCard.style.display = 'flex';
+            const reportSubCard = document.getElementById('menu-card-team-report-subtab');
+            if (reportSubCard) reportSubCard.style.display = 'flex';
 
             document.querySelectorAll('.three-dot-btn').forEach(function(el) { el.style.display = 'none'; });
             const syncBtn = document.getElementById('gs-sync-btn');
@@ -7667,6 +7691,10 @@ ${territory}`;
         // Field-entry রোল (Jr/Executive/Sr Executive) — টিম ড্যাশবোর্ড কার্ড লুকাও, বাকি সব আগের মতো
         const tdCard = document.getElementById('menu-card-team-dashboard');
         if (tdCard) tdCard.style.display = 'none';
+        const teamSubCard = document.getElementById('menu-card-team-subtab');
+        if (teamSubCard) teamSubCard.style.display = 'none';
+        const reportSubCard = document.getElementById('menu-card-team-report-subtab');
+        if (reportSubCard) reportSubCard.style.display = 'none';
 
         // শুধু explicitly 'viewer' হলেই বাকি hide করো (আগের আচরণ অপরিবর্তিত)
         if (normalizeRoleStr(role) !== 'viewer') return;
@@ -7696,10 +7724,118 @@ ${territory}`;
     }
 
     /* District ড্রপডাউনে সিলেকশন বদলালে Territory ড্রপডাউনও সেই District অনুযায়ী
-       রিফ্রেশ হয় (যাতে অপ্রাসঙ্গিক Territory অপশন না দেখায়) */
+       রিফ্রেশ হয় (যাতে অপ্রাসঙ্গিক Territory অপশন না দেখায়)। সিলেকশন localStorage-এ
+       সেভ করা হয়, কারণ ফিল্টার পপআপ বন্ধ/খোলার সময় select এলিমেন্ট নতুন করে তৈরি হয়
+       (renderLocationFilterSection innerHTML রিসেট করে) — সেভ না করলে প্রতিবার
+       "সব District/Territory"-তে রিসেট হয়ে যেত। */
     function onTeamDistrictFilterChange() {
+        const distSel = document.getElementById('td-district-filter');
+        localStorage.setItem(SELECTED_DISTRICT_KEY, distSel ? distSel.value : '');
+        // District বদলালে আগের Territory সিলেকশন হয়তো আর প্রাসঙ্গিক না, তাই রিসেট করো
+        localStorage.setItem(SELECTED_TERRITORY_KEY, '');
         populateTeamFilterDropdowns();
         refreshTeamDashboard();
+    }
+    function onTeamTerritoryFilterChange() {
+        const terrSel = document.getElementById('td-territory-filter');
+        localStorage.setItem(SELECTED_TERRITORY_KEY, terrSel ? terrSel.value : '');
+        refreshTeamDashboard();
+    }
+
+    /* ============================================================
+       District/Territory মাস্টার-লিস্ট — ডিলার লিস্টের মতোই (getDealers/
+       saveDealers প্যাটার্ন)। টিম মেম্বারদের বিদ্যমান ডাটা (teamMeta) থেকে
+       District/Territory অটো-লিস্টে যোগ হয়, আর ইউজার নিজেও ম্যানুয়ালি নতুন
+       District/Territory যোগ করতে পারবে (এমনকি কোনো টিম মেম্বার এখনো সেই
+       District/Territory-তে না থাকলেও) — ফলে আগে থেকেই ফিল্টার/ভবিষ্যৎ
+       ব্যবহারের জন্য অপশন বানিয়ে রাখা যায়। */
+    const CUSTOM_DISTRICTS_KEY = 'app_custom_districts';
+    const CUSTOM_TERRITORIES_KEY = 'app_custom_territories';
+    const SELECTED_DISTRICT_KEY = 'app_team_filter_district';
+    const SELECTED_TERRITORY_KEY = 'app_team_filter_territory';
+
+    // বাংলাদেশের উত্তরবঙ্গের (রাজশাহী + রংপুর বিভাগ) ১৬টি জেলা — ইংরেজি নামে,
+    // ডিফল্টভাবে District ড্রপডাউনে থাকবে (ইউজার চাইলে + বাটন দিয়ে আরও যোগ করতে পারবে)
+    const DEFAULT_NORTH_BENGAL_DISTRICTS = [
+        'Rajshahi', 'Natore', 'Naogaon', 'Chapainawabganj', 'Pabna', 'Sirajganj', 'Bogura', 'Joypurhat',
+        'Rangpur', 'Dinajpur', 'Thakurgaon', 'Panchagarh', 'Nilphamari', 'Lalmonirhat', 'Kurigram', 'Gaibandha'
+    ];
+
+    function getCustomDistricts() {
+        let list;
+        try { list = JSON.parse(localStorage.getItem(CUSTOM_DISTRICTS_KEY) || 'null'); }
+        catch (e) { list = null; }
+        if (!list || !Array.isArray(list)) {
+            list = DEFAULT_NORTH_BENGAL_DISTRICTS.slice(); // প্রথমবার ডিফল্ট ১৬ জেলা দিয়ে সিড করা হয়
+            localStorage.setItem(CUSTOM_DISTRICTS_KEY, JSON.stringify(list));
+        } else {
+            // আগের ভার্সনে বাংলা নামে সিড করা থাকলে (এই ফিচারের প্রথম রিলিজ), এখন
+            // ইংরেজি ডিফল্ট লিস্টে মাইগ্রেট করে দাও — ইউজারের নিজের যোগ করা কোনো
+            // এক্সট্রা নাম থাকলে (ডিফল্ট ১৬টার বাইরে) সেগুলো বজায় থাকবে
+            const OLD_BN_DEFAULTS = ['রাজশাহী', 'নাটোর', 'নওগাঁ', 'চাঁপাইনবাবগঞ্জ', 'পাবনা', 'সিরাজগঞ্জ', 'বগুড়া', 'জয়পুরহাট', 'রংপুর', 'দিনাজপুর', 'ঠাকুরগাঁও', 'পঞ্চগড়', 'নীলফামারী', 'লালমনিরহাট', 'কুড়িগ্রাম', 'গাইবান্ধা'];
+            const hasOldBn = list.some(function(d) { return OLD_BN_DEFAULTS.indexOf(d) !== -1; });
+            if (hasOldBn) {
+                const extras = list.filter(function(d) { return OLD_BN_DEFAULTS.indexOf(d) === -1; });
+                list = DEFAULT_NORTH_BENGAL_DISTRICTS.concat(extras);
+                localStorage.setItem(CUSTOM_DISTRICTS_KEY, JSON.stringify(list));
+            }
+        }
+        return list;
+    }
+    function saveCustomDistricts(list) { localStorage.setItem(CUSTOM_DISTRICTS_KEY, JSON.stringify(list)); }
+    function getCustomTerritories() {
+        // Territory-র কোনো ডিফল্ট লিস্ট নেই — প্রয়োজন অনুযায়ী ম্যানুয়ালি "+ Territory" দিয়ে যোগ করা হবে
+        try { return JSON.parse(localStorage.getItem(CUSTOM_TERRITORIES_KEY) || '[]') || []; }
+        catch (e) { return []; }
+    }
+    function saveCustomTerritories(list) { localStorage.setItem(CUSTOM_TERRITORIES_KEY, JSON.stringify(list)); }
+
+    function promptAddDistrict() {
+        const isBn = currentLang === 'bn';
+        const name = prompt(isBn ? 'নতুন District-এর নাম লিখুন:' : 'Enter new District name:');
+        if (!name || !name.trim()) return;
+        const trimmed = name.trim();
+        const list = getCustomDistricts();
+        if (list.indexOf(trimmed) === -1) { list.push(trimmed); saveCustomDistricts(list); }
+        populateTeamFilterDropdowns();
+        renderLocationFilterSection();
+        const distSel = document.getElementById('td-district-filter');
+        if (distSel) distSel.value = trimmed;
+        onTeamDistrictFilterChange();
+    }
+    function promptAddTerritory() {
+        const isBn = currentLang === 'bn';
+        const name = prompt(isBn ? 'নতুন Territory-র নাম লিখুন:' : 'Enter new Territory name:');
+        if (!name || !name.trim()) return;
+        const trimmed = name.trim();
+        const list = getCustomTerritories();
+        if (list.indexOf(trimmed) === -1) { list.push(trimmed); saveCustomTerritories(list); }
+        populateTeamFilterDropdowns();
+        renderLocationFilterSection();
+        const terrSel = document.getElementById('td-territory-filter');
+        if (terrSel) terrSel.value = trimmed;
+        onTeamTerritoryFilterChange();
+    }
+
+    /* ফিল্টার পপআপের ভেতরে District/Territory সেকশনের HTML বসায় (select দুটো +
+       "+ নতুন District/Territory" বাটন) — ডিলার সেকশনের মতোই প্রতিবার পপআপ খোলার
+       সময় রিফ্রেশ হয়। জুনিয়র এক্সিকিউটিভ থেকে সিনিয়র জিএম — সব রোলের জন্যই দেখানো হয়। */
+    function renderLocationFilterSection() {
+        const box = document.getElementById('location-filter-section');
+        if (!box) return;
+        const isBn = currentLang === 'bn';
+        let html = '<div class="dealer-filter-label">📍 ' + (isBn ? 'District / Territory' : 'District / Territory') + ':</div>';
+        html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">';
+        html += '<select id="td-district-filter" onchange="onTeamDistrictFilterChange()" style="flex:1;min-width:120px;padding:8px;border:1px solid #ccc;border-radius:6px;"><option value="">' + (isBn ? 'সব District' : 'All Districts') + '</option></select>';
+        html += '<button onclick="promptAddDistrict()">+ ' + (isBn ? 'District' : 'District') + '</button>';
+        html += '</div>';
+        html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">';
+        html += '<select id="td-territory-filter" onchange="onTeamTerritoryFilterChange()" style="flex:1;min-width:120px;padding:8px;border:1px solid #ccc;border-radius:6px;"><option value="">' + (isBn ? 'সব Territory' : 'All Territories') + '</option></select>';
+        html += '<button onclick="promptAddTerritory()">+ ' + (isBn ? 'Territory' : 'Territory') + '</button>';
+        html += '</div>';
+        box.style.display = 'block';
+        box.innerHTML = html;
+        populateTeamFilterDropdowns();
     }
 
     function populateTeamFilterDropdowns() {
@@ -7708,10 +7844,13 @@ ${territory}`;
         const terrSel = document.getElementById('td-territory-filter');
         if (!distSel || !terrSel) return;
 
-        const selectedDistrict = distSel.value || '';
-        const selectedTerritory = terrSel.value || '';
+        // select এলিমেন্ট প্রতিবার পপআপ খোলার সময় নতুন করে তৈরি হয় (তাই .value শুরুতে
+        // খালি থাকে) — আগে সেভ করা সিলেকশন localStorage থেকে ফিরিয়ে আনা হয়
+        const selectedDistrict = distSel.value || localStorage.getItem(SELECTED_DISTRICT_KEY) || '';
+        const selectedTerritory = terrSel.value || localStorage.getItem(SELECTED_TERRITORY_KEY) || '';
 
         const districts = {};
+        getCustomDistricts().forEach(function(d) { if (d) districts[d] = true; });
         Object.keys(teamMeta).forEach(function(u) {
             const d = (teamMeta[u].district || '').trim();
             if (d) districts[d] = true;
@@ -7722,6 +7861,7 @@ ${territory}`;
         if (distList.indexOf(selectedDistrict) === -1) distSel.value = '';
 
         const territories = {};
+        getCustomTerritories().forEach(function(t) { if (t) territories[t] = true; });
         Object.keys(teamMeta).forEach(function(u) {
             const m = teamMeta[u];
             const t = (m.territory || '').trim();
@@ -7730,6 +7870,11 @@ ${territory}`;
             if (distSel.value && d !== distSel.value) return; // নির্বাচিত District-এর বাইরের Territory বাদ
             territories[t] = true;
         });
+        // ✅ যে District নির্বাচন করা হয়েছে, তার জন্য বাই ডিফল্ট ৫টা Territory
+        // (যেমন: Sirajganj-1, Sirajganj-2, Sirajganj-3, Sirajganj-4, Sirajganj-5) অটো তৈরি করে দেখানো হয়
+        if (distSel.value) {
+            for (let i = 1; i <= 5; i++) { territories[distSel.value + '-' + i] = true; }
+        }
         const terrList = Object.keys(territories).sort();
         terrSel.innerHTML = '<option value="">সব Territory</option>' +
             terrList.map(function(t) { return '<option value="' + t + '"' + (t === selectedTerritory ? ' selected' : '') + '>' + t + '</option>'; }).join('');
@@ -7871,6 +8016,13 @@ ${territory}`;
             if (btnTeam) btnTeam.style.background = '#37474f';
             if (btnReport) btnReport.style.background = '#00695c';
         }
+    }
+
+    /* Home থেকে সরাসরি টিম ড্যাশবোর্ডের নির্দিষ্ট সাব-ট্যাবে (Team/Report) নিয়ে যায় —
+       "Team" ও "Report" হোম-কার্ড দুটোর জন্য */
+    function openTeamDashboardTab(tab) {
+        switchTab('team-dashboard-page');
+        switchTeamDashboardSubTab(tab);
     }
 
     /* "Team" ট্যাব — প্রতিটা Jr/Executive/Sr Executive-এর ডিটেইল পারফরম্যান্স কার্ড।
@@ -8532,6 +8684,7 @@ ${territory}`;
     /* ===== Banner Popup Functions ===== */
     function openFilterPopup() {
         document.getElementById('filter-popup').classList.add('show');
+        renderLocationFilterSection();
         renderDealerFilterSection();
     }
     function closeFilterPopup() {
@@ -9370,6 +9523,9 @@ ${territory}`;
         localStorage.setItem(FILTER_KEY, JSON.stringify({ month: 0, year: 0 }));
         saveActiveDealerFilter(getDealers().slice()); // ✅ ডিলার ফিল্টারও রিসেট করে সব ডিলার সিলেক্ট করে দেওয়া হচ্ছে
         renderDealerFilterSection();
+        localStorage.setItem(SELECTED_DISTRICT_KEY, '');
+        localStorage.setItem(SELECTED_TERRITORY_KEY, '');
+        renderLocationFilterSection();
         updateFilterBadge();
         updateApp();
         // dot clear
@@ -9521,6 +9677,9 @@ ${territory}`;
     function renderDealerFilterSection() {
         const box = document.getElementById('dealer-filter-section');
         if (!box) return;
+        // ASM ও তার উপরের (ভিউ-অনলি) রোলদের জন্য ডিলার ফিল্টার দেখানো হবে না —
+        // শুধু জুনিয়র/এক্সিকিউটিভ/সিনিয়র এক্সিকিউটিভ (ডাটা-এন্ট্রি রোল) দেখবে
+        if (!hasEntryAccess()) { box.style.display = 'none'; box.innerHTML = ''; return; }
         const dealers = getDealers();
         const active = getActiveDealerFilter();
         const isBn = currentLang === 'bn';
@@ -9536,6 +9695,7 @@ ${territory}`;
         html += '<button class="dealer-select-all-btn" onclick="selectAllDealersFilter()">✅ ' + (isBn ? 'সব নির্বাচন' : 'Select all') + '</button>';
         html += '<button onclick="promptAddNewDealer()">+ ' + (isBn ? 'নতুন ডিলার' : 'New dealer') + '</button>';
         html += '</div>';
+        box.style.display = 'block';
         box.innerHTML = html;
     }
     // ✅ যেকোনো Add-ফর্মের নেটিভ <select> এ বসানোর জন্য — ডিলার লিস্টের <option> HTML
