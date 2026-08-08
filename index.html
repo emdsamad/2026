@@ -7867,18 +7867,44 @@ ${territory}`;
             const t = (m.territory || '').trim();
             if (!t) return;
             const d = (m.district || '').trim();
-            if (distSel.value && d !== distSel.value) return; // নির্বাচিত District-এর বাইরের Territory বাদ
+            // নির্বাচিত District-এর বাইরের Territory বাদ ("Sirajganj District" সিলেক্ট করলেও Sirajganj-এর সব মিলবে)
+            if (distSel.value && d !== distSel.value && d !== normalizeDistrictName(distSel.value)) return;
             territories[t] = true;
         });
-        // ✅ যে District নির্বাচন করা হয়েছে, তার জন্য বাই ডিফল্ট ৫টা Territory
-        // (যেমন: Sirajganj-1, Sirajganj-2, Sirajganj-3, Sirajganj-4, Sirajganj-5) অটো তৈরি করে দেখানো হয়
-        if (distSel.value) {
-            for (let i = 1; i <= 5; i++) { territories[distSel.value + '-' + i] = true; }
-        }
         const terrList = Object.keys(territories).sort();
         terrSel.innerHTML = '<option value="">সব Territory</option>' +
             terrList.map(function(t) { return '<option value="' + t + '"' + (t === selectedTerritory ? ' selected' : '') + '>' + t + '</option>'; }).join('');
         if (terrList.indexOf(selectedTerritory) === -1) terrSel.value = '';
+    }
+
+    /* ✅ "Sirajganj District" এর মতো " District" সাফিক্স স্ট্রিপ করে বেয়ার জেলার নাম বের করে —
+       ASM যেহেতু পুরো জেলা দেখেন, তাই Users শীটে ASM-এর নিজের District কলামে "Sirajganj District"
+       আর Territory কলামে শুধু "Sirajganj" (কোনো -1/-2 ছাড়া) লিখে রাখা যায়। */
+    function normalizeDistrictName(v) {
+        return (v || '').trim().replace(/\s+District$/i, '').trim();
+    }
+
+    /* ✅ একজন owner (টিম মেম্বার)-এর district/territory নির্বাচিত ফিল্টারের সাথে মেলে কিনা যাচাই করে।
+       বিশেষ কনভেনশন: Territory ফিল্টারের মান যদি নিজেই একটা জেলার (বেয়ার) নাম হয় (যেমন শুধু
+       "Sirajganj", কোনো "-1/-2" সাফিক্স ছাড়া) — তাহলে সেটা "ওই পুরো জেলার সব Territory" বোঝায়,
+       তাই owner-এর নির্দিষ্ট Territory (Sirajganj-1, Sirajganj-2 ...) যাই হোক না কেন মিলে যাবে,
+       যতক্ষণ owner-এর District একই জেলায় পড়ে। */
+    function ownerMatchesLocationFilter(meta, districtVal, territoryVal) {
+        if (!districtVal && !territoryVal) return true;
+        if (!meta) return false;
+        const ownerDistrict = (meta.district || '').trim();
+        const ownerTerritory = (meta.territory || '').trim();
+        const bareSelectedDistrict = normalizeDistrictName(districtVal);
+
+        if (districtVal && ownerDistrict !== districtVal && ownerDistrict !== bareSelectedDistrict) return false;
+
+        if (territoryVal) {
+            const bareTerritoryAsDistrict = normalizeDistrictName(territoryVal);
+            const isWholeDistrictTerritory = (territoryVal === ownerDistrict) ||
+                (bareTerritoryAsDistrict && bareTerritoryAsDistrict === ownerDistrict);
+            if (!isWholeDistrictTerritory && ownerTerritory !== territoryVal) return false;
+        }
+        return true;
     }
 
     /* ===================== Team Dashboard (ASM ও উপরে) ===================== */
@@ -7926,13 +7952,9 @@ ${territory}`;
         }
 
         // owner-এর District/Territory (Users শীট প্রোফাইল থেকে) নির্বাচিত ফিল্টারের সাথে মেলে কিনা
+        // ("Sirajganj District" / "Sirajganj" কনভেনশন বোঝার জন্য শেয়ার্ড হেল্পার ব্যবহার হচ্ছে)
         function passesLocationFilter(owner) {
-            if (!districtVal && !territoryVal) return true;
-            const meta = teamMeta[owner];
-            if (!meta) return false; // মেটাডাটা নেই এমন owner ফিল্টার সিলেক্ট থাকলে বাদ পড়বে
-            if (districtVal && (meta.district || '') !== districtVal) return false;
-            if (territoryVal && (meta.territory || '') !== territoryVal) return false;
-            return true;
+            return ownerMatchesLocationFilter(teamMeta[owner], districtVal, territoryVal);
         }
 
         const deliveries = getDeliveries().filter(function(r) { return inRange(r.date) && passesLocationFilter(r.owner); });
@@ -8047,12 +8069,7 @@ ${territory}`;
             return true;
         }
         function passesLocationFilter(owner) {
-            if (!districtVal && !territoryVal) return true;
-            const meta = teamMeta[owner];
-            if (!meta) return false;
-            if (districtVal && (meta.district || '') !== districtVal) return false;
-            if (territoryVal && (meta.territory || '') !== territoryVal) return false;
-            return true;
+            return ownerMatchesLocationFilter(teamMeta[owner], districtVal, territoryVal);
         }
 
         // শুধু field-entry রোলদের (Jr/Executive/Sr Executive) কার্ড দেখাবে — ASM/ZSM
