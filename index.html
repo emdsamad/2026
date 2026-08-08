@@ -1358,7 +1358,7 @@
                 <option value="bn">বাংলা</option>
                 <option value="en">English</option>
             </select>
-            <button class="banner-icon-btn" onclick="openSyncPopup()" title="Google Sheet Sync Settings">
+            <button class="banner-icon-btn" id="sync-icon-btn-header" onclick="openSyncPopup()" title="Google Sheet Sync Settings">
                     <span class="banner-sync-dot" id="banner-sync-dot"></span>
                     <svg viewBox="0 0 24 24" fill="none" stroke="#1a237e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="3"/>
@@ -2828,20 +2828,7 @@
             <div style="display:inline-block;margin-top:12px;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:bold;" id="user-role-badge">-</div>
         </div>
 
-        <!-- Sync Settings Card -->
-        <div class="form-card" id="user-sync-card">
-            <h3 style="color:#1a237e;margin-top:0;">☁️ Google Sheet Sync</h3>
-            <div class="form-group">
-                <label style="font-weight:600;">Apps Script URL</label>
-                <input type="url" id="user-gs-url" placeholder="https://script.google.com/macros/s/..." style="font-size:12px;">
-            </div>
-            <div class="form-group" style="display:flex;align-items:center;gap:8px;">
-                <input type="checkbox" id="user-gs-auto" style="width:auto;">
-                <label style="margin:0;font-weight:normal;">প্রতিবার save-এর পর অটো সিঙ্ক করো</label>
-            </div>
-            <button class="btn-primary" onclick="saveUserSyncSettings()" style="width:100%;">💾 সেটিংস সেভ করুন</button>
-            <p style="color:#888;font-size:11.5px;margin:10px 0 0;text-align:center;">Sync, Restore, Backup ও CSV Import বাটনগুলো উপরের 🔀 (সিঙ্ক) আইকনের পপআপে পাবেন।</p>
-        </div>
+        <!-- Sync Settings এখন এই পেজে নেই — শুধু হেডারের ⚙️ আইকনে (Admin লগইনে) থাকবে -->
 
         <!-- Danger Zone: Reset All Data Card -->
         <div class="form-card" id="user-danger-card" style="border:2px solid #ffcdd2;background:#fff5f5;">
@@ -7593,38 +7580,36 @@ ${territory}`;
         // User info দেখাও
         const user = localStorage.getItem(AUTH_USER_KEY) || '-';
         const role = getAuthRole();
+        const isAdmin = normalizeRoleStr(role) === 'admin';
         document.getElementById('user-page-name').innerText = user;
-        document.getElementById('user-page-role').innerText = role === 'admin' ? 'Administrator' : 'Viewer';
+        document.getElementById('user-page-role').innerText = role || 'Viewer';
         const badge = document.getElementById('user-role-badge');
-        if (role === 'admin') {
+        const dangerCard = document.getElementById('user-danger-card');
+        if (isAdmin) {
             badge.innerText = '🔑 Admin';
             badge.style.background = '#1a237e';
             badge.style.color = '#fff';
-            document.getElementById('user-sync-card').style.display = 'block';
+            if (dangerCard) dangerCard.style.display = 'block';
         } else {
-            badge.innerText = '👁 Viewer';
+            badge.innerText = '👁 ' + (role || 'Viewer');
             badge.style.background = '#e8f5e9';
             badge.style.color = '#2e7d32';
-            document.getElementById('user-sync-card').style.display = 'none';
+            // Danger Zone (ফুল রিসেট) — শুধু Admin দেখবে
+            if (dangerCard) dangerCard.style.display = 'none';
         }
-        // Sync URL ও auto checkbox লোড করো
-        document.getElementById('user-gs-url').value = localStorage.getItem(GS_SYNC_URL_KEY) || '';
-        document.getElementById('user-gs-auto').checked = localStorage.getItem(GS_SYNC_AUTO_KEY) === 'true';
-    }
-
-    function saveUserSyncSettings() {
-        const url  = document.getElementById('user-gs-url').value.trim();
-        const auto = document.getElementById('user-gs-auto').checked;
-        if (url) localStorage.setItem(GS_SYNC_URL_KEY, url);
-        localStorage.setItem(GS_SYNC_AUTO_KEY, auto ? 'true' : 'false');
-        alert(currentLang === 'bn' ? '✅ সেটিংস সেভ হয়েছে।' : '✅ Settings saved.');
     }
 
     /* Viewer/ASM+ হলে edit/add/delete বাটনগুলো hide করো, এবং non-field রোলদের জন্য
        এন্ট্রি-মেনু লুকিয়ে টিম ড্যাশবোর্ড দেখাও */
     function applyRoleBasedUI() {
         const role = getAuthRole();
+        const isAdmin = normalizeRoleStr(role) === 'admin';
         const fieldRole = hasEntryAccess(); // Jr/Executive/Sr Executive (বা admin/খালি রোল, ব্যাকওয়ার্ড কম্প্যাটিবিলিটি)
+
+        // হেডারের ⚙️ Sync আইকন — শুধু Admin লগইনে দেখাবে, বাকি সব রোলে (Jr Executive
+        // থেকে Sr GM, viewer সহ) লুকানো থাকবে
+        const syncIconBtn = document.getElementById('sync-icon-btn-header');
+        if (syncIconBtn) syncIconBtn.style.display = isAdmin ? 'flex' : 'none';
 
         if (!fieldRole) {
             // ASM ও তার উপরের সব রোল — ভিউ-অনলি টিম ড্যাশবোর্ড মোড
@@ -7775,7 +7760,7 @@ ${territory}`;
        ইউজারকে আর ম্যানুয়ালি Sync URL বসাতে হবে না, শুধু Office ID + Password দিয়ে
        সরাসরি লগইন করলেই চলবে। Deploy > New deployment থেকে পাওয়া Web App URL-টা
        নিচের '' এর জায়গায় বসান (যেমন: 'https://script.google.com/macros/s/AKfycb.../exec')। */
-    const DEFAULT_GS_SYNC_URL = '';
+    const DEFAULT_GS_SYNC_URL = 'https://script.google.com/macros/s/AKfycbzC-FOwUU6zWq1BCmeiln9JEtqVxZrpY8TX66jMwwqjbzlnEqngnSAn7XKydBhbTl1__w/exec';
 
     function getEffectiveSyncUrl() {
         return localStorage.getItem(GS_SYNC_URL_KEY) || DEFAULT_GS_SYNC_URL || '';
