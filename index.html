@@ -1913,6 +1913,7 @@
         </div>
         <div style="text-align:center;font-size:15px;font-weight:bold;color:#00332c;background:#e0f2f1;border-radius:8px;padding:9px 14px;margin-bottom:12px;">
             👥 টিম সামারি — <span id="td-role-badge">-</span> (<span id="td-username-badge">-</span>)
+            <div id="td-reportsto-wrap" style="display:none;font-size:13px;font-weight:normal;color:#455a64;margin-top:4px;">👤 রিপোর্টস টু: <b id="td-reportsto-badge">-</b></div>
         </div>
 
         <!-- তারিখ ফিল্টার -->
@@ -3762,6 +3763,34 @@
     function handleProfileKey(event, field) {
         if (event.key === 'Enter') {
             saveProfileField(field);
+        }
+    }
+
+    /* ✅ লগইন করা এমপ্লয়ির প্রোফাইল হেডার (লোগোর নিচে Name/Designation/Territory)
+       Users শীট থেকে আসা team_meta অনুযায়ী লগইন হওয়ার সাথে সাথেই অটোমেটিক আপডেট
+       হয়ে যায়: Name <- EmpName, Designation <- Role, Territory <- Territory কলাম।
+       (⋮ মেনুর ✏️ Edit দিয়ে ইউজার চাইলে সাময়িকভাবে ওভাররাইড করতে পারবে, তবে পরের
+       লগইনে আবার Users শীটের সাম্প্রতিক ডাটা দিয়েই রিফ্রেশ হয়ে যাবে) */
+    function applyLoginProfileFromTeamMeta() {
+        const authUser = getAuthUser();
+        if (!authUser) return;
+        const teamMeta = getTeamMeta();
+        const own = teamMeta[authUser];
+        if (!own) return;
+        if (own.empName) {
+            localStorage.setItem('app_profile_name', own.empName);
+            const el = document.getElementById('val-profile-name');
+            if (el) el.innerText = own.empName;
+        }
+        if (own.role) {
+            localStorage.setItem('app_profile_desg', own.role);
+            const el = document.getElementById('val-profile-desg');
+            if (el) el.innerText = own.role;
+        }
+        if (own.territory) {
+            localStorage.setItem('app_profile_territory', own.territory);
+            const el = document.getElementById('val-profile-territory');
+            if (el) el.innerText = own.territory;
         }
     }
 
@@ -7512,9 +7541,15 @@ ${territory}`;
                 applyRoleBasedUI();
                 updateApp();
                 if (typeof injectGlobalFooters === 'function') injectGlobalFooters();
+                // Users শীটে থাকা এই এমপ্লয়ির নিজের প্রোফাইল (Name/Designation/Territory)
+                // যদি cache-এ (team_meta) আগে থেকেই থাকে, লগইনের সাথে সাথেই সেটা দেখাও —
+                // নিচের silentAutoRestoreOnLogin শেষ হলে সার্ভারের সবচেয়ে নতুন ডাটা দিয়ে
+                // আবার রিফ্রেশ হবে
+                applyLoginProfileFromTeamMeta();
                 // লগইনের পর ডাটা নিজে থেকে (ম্যানুয়াল রিস্টোর ছাড়াই) role/hierarchy
                 // অনুযায়ী লোড হওয়ার জন্য — নীরবে, ব্যাকগ্রাউন্ডে
                 silentAutoRestoreOnLogin().then(function() {
+                    applyLoginProfileFromTeamMeta();
                     updateApp();
                     if (typeof refreshTeamDashboard === 'function') refreshTeamDashboard();
                 });
@@ -7594,6 +7629,11 @@ ${territory}`;
         localStorage.removeItem(AUTH_TOKEN_KEY);
         localStorage.removeItem(AUTH_USER_KEY);
         localStorage.removeItem(AUTH_ROLE_KEY);
+        // পরের লগইনে (হয়তো অন্য এমপ্লয়ি) নিজের District/Territory যেন আবার
+        // অটোমেটিক ফিল্টারে বসে, তাই ফ্ল্যাগ ও আগের সিলেকশন রিসেট করো
+        localStorage.removeItem(TERRITORY_AUTO_APPLIED_KEY);
+        localStorage.removeItem(SELECTED_DISTRICT_KEY);
+        localStorage.removeItem(SELECTED_TERRITORY_KEY);
         showLoginScreen();
     }
 
@@ -7723,6 +7763,23 @@ ${territory}`;
         return owner;
     }
 
+    /* ✅ লগইন করা ইউজার (সাধারণত ASM ও তার উপরের রোল) যার কাছে রিপোর্ট করেন, সেই
+       ম্যানেজারের নাম টিম ড্যাশবোর্ডের হেডারে দেখায় — Users শীটের ReportsTo কলাম
+       (team_meta[username].reportsTo, Office ID হিসেবে আসে) থেকে। ReportsTo না থাকলে
+       (যেমন সবচেয়ে উপরের রোল, বা field-entry ইউজার যাদের এই ড্যাশবোর্ড দেখারই কথা না)
+       লাইনটা লুকিয়ে রাখা হয়। */
+    function renderReportsToBadge(teamMeta) {
+        const wrap = document.getElementById('td-reportsto-wrap');
+        const badge = document.getElementById('td-reportsto-badge');
+        if (!wrap || !badge) return;
+        teamMeta = teamMeta || getTeamMeta();
+        const own = teamMeta[getAuthUser()];
+        const reportsToId = own && own.reportsTo ? String(own.reportsTo).trim() : '';
+        if (!reportsToId) { wrap.style.display = 'none'; return; }
+        badge.innerText = ownerDisplayName(reportsToId, teamMeta);
+        wrap.style.display = 'block';
+    }
+
     /* District ড্রপডাউনে সিলেকশন বদলালে Territory ড্রপডাউনও সেই District অনুযায়ী
        রিফ্রেশ হয় (যাতে অপ্রাসঙ্গিক Territory অপশন না দেখায়)। সিলেকশন localStorage-এ
        সেভ করা হয়, কারণ ফিল্টার পপআপ বন্ধ/খোলার সময় select এলিমেন্ট নতুন করে তৈরি হয়
@@ -7753,6 +7810,10 @@ ${territory}`;
     const CUSTOM_TERRITORIES_KEY = 'app_custom_territories';
     const SELECTED_DISTRICT_KEY = 'app_team_filter_district';
     const SELECTED_TERRITORY_KEY = 'app_team_filter_territory';
+    /* লগইন করা এমপ্লয়ির নিজের District/Territory (Users শীট থেকে team_meta-তে আসা)
+       অটোমেটিক ফিল্টার আইকনে বসানো হয় — প্রতি লগইনে একবারই বসে, তারপর ইউজার
+       ড্রপডাউন থেকে যা খুশি বদলাতে পারবে (এরপর আর জোর করে ওভাররাইট হবে না) */
+    const TERRITORY_AUTO_APPLIED_KEY = 'app_team_filter_auto_applied';
 
     // বাংলাদেশের উত্তরবঙ্গের (রাজশাহী + রংপুর বিভাগ) ১৬টি জেলা — ইংরেজি নামে,
     // ডিফল্টভাবে District ড্রপডাউনে থাকবে (ইউজার চাইলে + বাটন দিয়ে আরও যোগ করতে পারবে)
@@ -7877,6 +7938,26 @@ ${territory}`;
         if (terrList.indexOf(selectedTerritory) === -1) terrSel.value = '';
     }
 
+    /* ✅ লগইন করা এমপ্লয়ির (Users শীটের) নিজের District/Territory অটোমেটিক
+       ফিল্টার আইকনে (td-district-filter / td-territory-filter) বসিয়ে দেয় —
+       যাতে লগইনের পরপরই টিম ড্যাশবোর্ড নিজের এলাকা অনুযায়ী ফিল্টার হয়ে দেখায়।
+       প্রতি লগইনে একবারই স্বয়ংক্রিয়ভাবে বসে (TERRITORY_AUTO_APPLIED_KEY ফ্ল্যাগ
+       দিয়ে ট্র্যাক করা হয়) — এরপর ইউজার নিজে ড্রপডাউন থেকে যেকোনো District/Territory
+       (বা "সব") সিলেক্ট করে বদলে নিতে পারবে, সেটাই আর ওভাররাইট হবে না। */
+    function applyLoginDefaultTerritoryFilter() {
+        if (localStorage.getItem(TERRITORY_AUTO_APPLIED_KEY) === '1') return;
+        const authUser = getAuthUser();
+        if (!authUser) return;
+        const teamMeta = getTeamMeta();
+        const own = teamMeta[authUser];
+        // team_meta এখনো সার্ভার থেকে না এলে (প্রথম রেন্ডারে খালি থাকতে পারে) — এখনই
+        // ফ্ল্যাগ সেট না করে, পরের রিফ্রেশে আবার চেষ্টা করার সুযোগ রাখো
+        if (!own) return;
+        if (own.district) localStorage.setItem(SELECTED_DISTRICT_KEY, own.district);
+        if (own.territory) localStorage.setItem(SELECTED_TERRITORY_KEY, own.territory);
+        localStorage.setItem(TERRITORY_AUTO_APPLIED_KEY, '1');
+    }
+
     /* ✅ "Sirajganj District" এর মতো " District" সাফিক্স স্ট্রিপ করে বেয়ার জেলার নাম বের করে —
        ASM যেহেতু পুরো জেলা দেখেন, তাই Users শীটে ASM-এর নিজের District কলামে "Sirajganj District"
        আর Territory কলামে শুধু "Sirajganj" (কোনো -1/-2 ছাড়া) লিখে রাখা যায়। */
@@ -7934,8 +8015,10 @@ ${territory}`;
         if (roleBadge) roleBadge.innerText = getAuthRole() || '-';
         if (userBadge) userBadge.innerText = getAuthUser() || '-';
 
+        applyLoginDefaultTerritoryFilter();
         const teamMeta = getTeamMeta();
         populateTeamFilterDropdowns();
+        renderReportsToBadge(teamMeta);
 
         const startVal = (document.getElementById('td-start-date') || {}).value || '';
         const endVal   = (document.getElementById('td-end-date')   || {}).value || '';
