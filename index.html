@@ -3766,55 +3766,66 @@
         }
     }
 
-    /* ✅ লগইন করা এমপ্লয়ির প্রোফাইল হেডার (লোগোর নিচে Name/Designation/Territory)
-       Users শীট থেকে আসা team_meta অনুযায়ী লগইন হওয়ার সাথে সাথেই অটোমেটিক আপডেট
-       হয়ে যায়: Name <- EmpName, Designation <- Role, Territory <- Territory কলাম।
-       (⋮ মেনুর ✏️ Edit দিয়ে ইউজার চাইলে সাময়িকভাবে ওভাররাইড করতে পারবে, তবে পরের
-       লগইনে আবার Users শীটের সাম্প্রতিক ডাটা দিয়েই রিফ্রেশ হয়ে যাবে)
+    /* ============================================================
+       ✅ প্রোফাইল হেডার অটো-সিঙ্ক (নতুন করে, আরও শক্তপোক্তভাবে বানানো)
+       ============================================================
+       লোগোর নিচে Name/Designation/Territory — Users শীট থেকে আসা team_meta
+       অনুযায়ী লগইন হওয়ার সাথে সাথেই বসে যায়:
+         Name        <- EmpName কলাম
+         Designation <- Role কলাম
+         Territory   <- Territory কলাম
+       টিম ড্যাশবোর্ড রিফ্রেশ, লগইন, টোকেন-ভেরিফাই — সব জায়গা থেকেই এই একই
+       ফাংশন কল হয়, যাতে ডাটা যেই মুহূর্তে পাওয়া যায় সাথে সাথেই হেডারে বসে।
 
-       ⚠️ এটা কাজ করার পূর্বশর্ত: ব্যাকএন্ডের team_meta রেসপন্সে লগইন করা ইউজারের
-       *নিজের* রেকর্ড (শুধু তার অধস্তনদের না) empName/role/territory সহ থাকতে হবে।
-       না থাকলে Name/Territory ফাঁকা থেকে যাবে — Designation তবুও দেখা যাবে কারণ
-       সেটা লগইন রেসপন্সের role থেকে ফলব্যাক হিসেবে বসে। */
+       এটা কাজ করার পূর্বশর্ত: ব্যাকএন্ডের team_meta রেসপন্সে লগইন করা ইউজারের
+       নিজের রেকর্ড (empName/role/territory সহ) থাকতে হবে — এবং Users শীটে
+       ঐ কলামগুলোতে আসলেই ডাটা বসানো থাকতে হবে (খালি কলাম হলে খালিই দেখাবে)। */
+    function setProfileHeaderField(field, value) {
+        if (!value) return false;
+        localStorage.setItem('app_profile_' + field, value);
+        const el = document.getElementById('val-profile-' + field);
+        if (el) el.innerText = value;
+        return true;
+    }
+
+    function findOwnTeamMetaRecord(teamMeta, authUser) {
+        if (teamMeta[authUser]) return teamMeta[authUser];
+        // key-তে সামান্য case/space তফাত থাকলেও (পুরনো ক্যাশড ডাটা বা ব্যাকএন্ডের
+        // সংস্করণভেদে) যেন মিলে যায়
+        const wantedKey = authUser.trim().toLowerCase();
+        const foundKey = Object.keys(teamMeta).find(function(k) { return k.trim().toLowerCase() === wantedKey; });
+        return foundKey ? teamMeta[foundKey] : null;
+    }
+
     function applyLoginProfileFromTeamMeta() {
         const authUser = getAuthUser();
         if (!authUser) return;
         const teamMeta = getTeamMeta();
+        const own = findOwnTeamMetaRecord(teamMeta, authUser);
 
-        // key-তে সামান্য case/space তফাত থাকলেও (ব্যাকএন্ডের ডাটা এন্ট্রি ভুলের কারণে)
-        // যেন মিলে যায়, তাই একটা কেস-ইনসেনসিটিভ/ট্রিম ফলব্যাক লুকআপও রাখা হলো
-        let own = teamMeta[authUser];
         if (!own) {
-            const wantedKey = authUser.trim().toLowerCase();
-            const foundKey = Object.keys(teamMeta).find(function(k) { return k.trim().toLowerCase() === wantedKey; });
-            if (foundKey) own = teamMeta[foundKey];
-        }
-        if (!own) {
-            console.warn('[Profile Header] team_meta-তে "' + authUser + '" এর নিজের রেকর্ড পাওয়া যায়নি। ব্যাকএন্ডের teamMeta রেসপন্সে এই লগইন-ইউজারের নিজের এন্ট্রি (empName/role/district/territory সহ) পাঠানো হচ্ছে কিনা চেক করুন। বর্তমান team_meta:', teamMeta);
+            console.warn('[Profile Header] team_meta-তে "' + authUser + '" এর নিজের রেকর্ড পাওয়া যায়নি। ' +
+                'কারণ হতে পারে: (১) ব্যাকএন্ড এখনো রিডিপ্লয় করা হয়নি, (২) Users শীটে এই ' +
+                'Username-এর রো খুঁজে পাওয়া যাচ্ছে না। বর্তমান team_meta:', teamMeta,
+                '| logged-in username:', JSON.stringify(authUser));
+        } else {
+            console.log('[Profile Header] team_meta রেকর্ড পাওয়া গেছে:', own);
         }
 
-        const nameVal = (own && own.empName) ? own.empName : '';
+        const gotName = setProfileHeaderField('name', own && own.empName);
         // Designation: team_meta-তে own.role থাকলে সেটাই, না থাকলে লগইন রেসপন্সের
         // role (AUTH_ROLE_KEY) ফলব্যাক হিসেবে — এভাবে team_meta না এলেও অন্তত
         // Designation ফাঁকা থাকবে না
-        const desgVal = (own && own.role) ? own.role : (getAuthRole() || '');
-        const terrVal = (own && own.territory) ? own.territory : '';
+        const gotDesg = setProfileHeaderField('desg', (own && own.role) || getAuthRole());
+        const gotTerr = setProfileHeaderField('territory', own && own.territory);
 
-        if (nameVal) {
-            localStorage.setItem('app_profile_name', nameVal);
-            const el = document.getElementById('val-profile-name');
-            if (el) el.innerText = nameVal;
+        if (own && (!own.empName || !own.territory)) {
+            console.warn('[Profile Header] "' + authUser + '" এর team_meta রেকর্ডে কিছু ফিল্ড খালি — ' +
+                'empName: "' + (own.empName || '') + '", territory: "' + (own.territory || '') + '". ' +
+                'Users শীটে এই এমপ্লয়ির রো-তে EmpName/Territory কলাম পূরণ করা আছে কিনা দেখুন।');
         }
-        if (desgVal) {
-            localStorage.setItem('app_profile_desg', desgVal);
-            const el = document.getElementById('val-profile-desg');
-            if (el) el.innerText = desgVal;
-        }
-        if (terrVal) {
-            localStorage.setItem('app_profile_territory', terrVal);
-            const el = document.getElementById('val-profile-territory');
-            if (el) el.innerText = terrVal;
-        }
+
+        return gotName && gotDesg && gotTerr;
     }
 
     // রিপোর্ট পেজ থেকে প্রজেকশন বক্স পরিবর্তন করলে ড্যাশবোর্ডে ও লোকাল স্টোরেজে সিঙ্ক করা
@@ -7676,6 +7687,11 @@ ${territory}`;
             const json = await res.json();
             if (json.valid) {
                 localStorage.setItem(AUTH_ROLE_KEY, json.role);
+                // ✅ ব্যাকএন্ড ফিক্সের পর verifyToken এখন ক্যানোনিকাল (ট্রিম করা) username-ও
+                // পাঠায় — আগের কোনো লগইনে সামান্য স্পেস/কেস তফাতসহ username সেভ হয়ে
+                // থাকলেও, এখন থেকে প্রতিবার অ্যাপ খোলার সময় এটা ঠিক হয়ে যাবে, যার ফলে
+                // team_meta-তে নিজের রেকর্ড খুঁজে পাওয়া নিশ্চিত হয়
+                if (json.username) localStorage.setItem(AUTH_USER_KEY, json.username);
                 showApp();
             } else {
                 localStorage.removeItem(AUTH_TOKEN_KEY);
@@ -8039,6 +8055,7 @@ ${territory}`;
         if (userBadge) userBadge.innerText = getAuthUser() || '-';
 
         applyLoginDefaultTerritoryFilter();
+        applyLoginProfileFromTeamMeta();
         const teamMeta = getTeamMeta();
         populateTeamFilterDropdowns();
         renderReportsToBadge(teamMeta);
