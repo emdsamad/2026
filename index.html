@@ -1897,6 +1897,19 @@
             </div>
         </div>
 
+        <!-- District/Territory ফিল্টার — টিম মেম্বারদের Users শীট প্রোফাইল থেকে -->
+        <div class="card" style="margin-bottom:12px;">
+            <h4 style="margin-bottom:8px;">📍 District / Territory ফিল্টার</h4>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <select id="td-district-filter" onchange="onTeamDistrictFilterChange()" style="flex:1;min-width:130px;padding:8px;border:1px solid #ccc;border-radius:6px;">
+                    <option value="">সব District</option>
+                </select>
+                <select id="td-territory-filter" onchange="refreshTeamDashboard()" style="flex:1;min-width:130px;padding:8px;border:1px solid #ccc;border-radius:6px;">
+                    <option value="">সব Territory</option>
+                </select>
+            </div>
+        </div>
+
         <!-- সামারি কার্ড -->
         <div class="dashboard-wrapper">
             <div class="dashboard-column left-col">
@@ -1916,7 +1929,7 @@
                 <table style="width:100%;border-collapse:collapse;font-size:12px;" id="td-team-table">
                     <thead>
                         <tr style="background:#e0f2f1;text-align:left;">
-                            <th style="padding:8px;">Office ID</th>
+                            <th style="padding:8px;">নাম (Office ID)</th>
                             <th style="padding:8px;">সেলস (ব্যাগ)</th>
                             <th style="padding:8px;">সেলস ভ্যালু</th>
                             <th style="padding:8px;">কালেকশন</th>
@@ -7567,6 +7580,7 @@ ${territory}`;
                 showApp();
             } else {
                 localStorage.removeItem(AUTH_TOKEN_KEY);
+                if (json.message) alert(json.message);
                 showLoginScreen();
             }
         } catch(e) {
@@ -7652,6 +7666,60 @@ ${territory}`;
         });
     }
 
+    function getTeamMeta() {
+        try {
+            return JSON.parse(localStorage.getItem('team_meta') || '{}') || {};
+        } catch (e) { return {}; }
+    }
+
+    function ownerDisplayName(owner, teamMeta) {
+        if (!owner) return '(অজানা/পুরনো এন্ট্রি)';
+        const meta = teamMeta[owner];
+        if (meta && meta.empName) return meta.empName + ' (' + owner + ')';
+        return owner;
+    }
+
+    /* District ড্রপডাউনে সিলেকশন বদলালে Territory ড্রপডাউনও সেই District অনুযায়ী
+       রিফ্রেশ হয় (যাতে অপ্রাসঙ্গিক Territory অপশন না দেখায়) */
+    function onTeamDistrictFilterChange() {
+        populateTeamFilterDropdowns();
+        refreshTeamDashboard();
+    }
+
+    function populateTeamFilterDropdowns() {
+        const teamMeta = getTeamMeta();
+        const distSel = document.getElementById('td-district-filter');
+        const terrSel = document.getElementById('td-territory-filter');
+        if (!distSel || !terrSel) return;
+
+        const selectedDistrict = distSel.value || '';
+        const selectedTerritory = terrSel.value || '';
+
+        const districts = {};
+        Object.keys(teamMeta).forEach(function(u) {
+            const d = (teamMeta[u].district || '').trim();
+            if (d) districts[d] = true;
+        });
+        const distList = Object.keys(districts).sort();
+        distSel.innerHTML = '<option value="">সব District</option>' +
+            distList.map(function(d) { return '<option value="' + d + '"' + (d === selectedDistrict ? ' selected' : '') + '>' + d + '</option>'; }).join('');
+        if (distList.indexOf(selectedDistrict) === -1) distSel.value = '';
+
+        const territories = {};
+        Object.keys(teamMeta).forEach(function(u) {
+            const m = teamMeta[u];
+            const t = (m.territory || '').trim();
+            if (!t) return;
+            const d = (m.district || '').trim();
+            if (distSel.value && d !== distSel.value) return; // নির্বাচিত District-এর বাইরের Territory বাদ
+            territories[t] = true;
+        });
+        const terrList = Object.keys(territories).sort();
+        terrSel.innerHTML = '<option value="">সব Territory</option>' +
+            terrList.map(function(t) { return '<option value="' + t + '"' + (t === selectedTerritory ? ' selected' : '') + '>' + t + '</option>'; }).join('');
+        if (terrList.indexOf(selectedTerritory) === -1) terrSel.value = '';
+    }
+
     /* ===================== Team Dashboard (ASM ও উপরে) ===================== */
     function setTeamDashboardRange(preset) {
         const s = document.getElementById('td-start-date');
@@ -7679,8 +7747,13 @@ ${territory}`;
         if (roleBadge) roleBadge.innerText = getAuthRole() || '-';
         if (userBadge) userBadge.innerText = getAuthUser() || '-';
 
+        const teamMeta = getTeamMeta();
+        populateTeamFilterDropdowns();
+
         const startVal = (document.getElementById('td-start-date') || {}).value || '';
         const endVal   = (document.getElementById('td-end-date')   || {}).value || '';
+        const districtVal  = (document.getElementById('td-district-filter')  || {}).value || '';
+        const territoryVal = (document.getElementById('td-territory-filter') || {}).value || '';
 
         function inRange(dateStr) {
             if (!startVal && !endVal) return true;
@@ -7691,14 +7764,24 @@ ${territory}`;
             return true;
         }
 
-        const deliveries = getDeliveries().filter(function(r) { return inRange(r.date); });
-        const payments = getPayments().filter(function(r) { return inRange(r.date); });
+        // owner-এর District/Territory (Users শীট প্রোফাইল থেকে) নির্বাচিত ফিল্টারের সাথে মেলে কিনা
+        function passesLocationFilter(owner) {
+            if (!districtVal && !territoryVal) return true;
+            const meta = teamMeta[owner];
+            if (!meta) return false; // মেটাডাটা নেই এমন owner ফিল্টার সিলেক্ট থাকলে বাদ পড়বে
+            if (districtVal && (meta.district || '') !== districtVal) return false;
+            if (territoryVal && (meta.territory || '') !== territoryVal) return false;
+            return true;
+        }
+
+        const deliveries = getDeliveries().filter(function(r) { return inRange(r.date) && passesLocationFilter(r.owner); });
+        const payments = getPayments().filter(function(r) { return inRange(r.date) && passesLocationFilter(r.owner); });
 
         // owner (Office ID) অনুযায়ী গ্রুপ করো — restoreAll ইতিমধ্যে role/hierarchy অনুযায়ী
         // ফিল্টার করা ডাটাই পাঠায়, তাই এখানে যা আছে তার পুরোটাই এই ইউজারের দেখার অধিকার আছে
         const byOwner = {};
         function ensureOwner(o) {
-            const key = o || '(অজানা/পুরনো এন্ট্রি)';
+            const key = o || '';
             if (!byOwner[key]) byOwner[key] = { bags: 0, salesValue: 0, collection: 0 };
             return byOwner[key];
         }
@@ -7735,13 +7818,13 @@ ${territory}`;
         if (tbody) {
             const owners = Object.keys(byOwner).sort(function(a, b) { return byOwner[b].salesValue - byOwner[a].salesValue; });
             if (!owners.length) {
-                tbody.innerHTML = '<tr><td colspan="5" style="padding:10px;text-align:center;color:#888;">এই রেঞ্জে কোনো ডাটা নেই</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="padding:10px;text-align:center;color:#888;">এই ফিল্টারে কোনো ডাটা নেই</td></tr>';
             } else {
                 tbody.innerHTML = owners.map(function(o) {
                     const r = byOwner[o];
                     const due = r.salesValue - r.collection;
                     return '<tr style="border-bottom:1px solid #eee;">' +
-                        '<td style="padding:8px;font-weight:600;">' + o + '</td>' +
+                        '<td style="padding:8px;font-weight:600;">' + ownerDisplayName(o, teamMeta) + '</td>' +
                         '<td style="padding:8px;">' + r.bags.toLocaleString('en-BD') + '</td>' +
                         '<td style="padding:8px;">৳' + r.salesValue.toLocaleString('en-BD') + '</td>' +
                         '<td style="padding:8px;">৳' + r.collection.toLocaleString('en-BD') + '</td>' +
@@ -8207,6 +8290,13 @@ ${territory}`;
                     });
                     localStorage.setItem(storageKey, JSON.stringify(local));
                 }
+            }
+
+            // টিম ড্যাশবোর্ডের জন্য Office ID -> {empName, district, territory, role} মেটাডাটা —
+            // সবসময় সার্ভারের সদ্যতম স্কোপড ভিউ দিয়ে ওভাররাইট করা হয় (এটা ইউজার-তৈরি ডাটা নয়,
+            // তাই merge/full দুই মোডেই সরাসরি রিপ্লেস করাই ঠিক)
+            if (data.teamMeta && typeof data.teamMeta === 'object') {
+                localStorage.setItem('team_meta', JSON.stringify(data.teamMeta));
             }
 
             if (!silent) closeSyncSettings();
