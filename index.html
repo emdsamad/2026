@@ -7611,15 +7611,12 @@ ${territory}`;
                 applyRoleBasedUI();
                 updateApp();
                 if (typeof injectGlobalFooters === 'function') injectGlobalFooters();
-                // Users শীটে থাকা এই এমপ্লয়ির নিজের প্রোফাইল (Name/Designation/Territory)
-                // যদি cache-এ (team_meta) আগে থেকেই থাকে, লগইনের সাথে সাথেই সেটা দেখাও —
-                // নিচের silentAutoRestoreOnLogin শেষ হলে সার্ভারের সবচেয়ে নতুন ডাটা দিয়ে
-                // আবার রিফ্রেশ হবে
-                applyLoginProfileFromTeamMeta();
+                // Note: Name/Designation/Territory হেডার এখন doLogin()/checkAuthOnLoad()
+                // থেকে সরাসরি applyProfileFieldsFromServer() দিয়ে বসানো হয় (সহজ ও
+                // সরাসরি নিয়ম) — এখানে আলাদা করে আর কিছু করার দরকার নেই
                 // লগইনের পর ডাটা নিজে থেকে (ম্যানুয়াল রিস্টোর ছাড়াই) role/hierarchy
                 // অনুযায়ী লোড হওয়ার জন্য — নীরবে, ব্যাকগ্রাউন্ডে
                 silentAutoRestoreOnLogin().then(function() {
-                    applyLoginProfileFromTeamMeta();
                     updateApp();
                     if (typeof refreshTeamDashboard === 'function') refreshTeamDashboard();
                 });
@@ -8097,7 +8094,6 @@ ${territory}`;
         if (userBadge) userBadge.innerText = getAuthUser() || '-';
 
         applyLoginDefaultTerritoryFilter();
-        applyLoginProfileFromTeamMeta();
         const teamMeta = getTeamMeta();
         populateTeamFilterDropdowns();
         renderReportsToBadge(teamMeta);
