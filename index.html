@@ -1349,6 +1349,11 @@
                         </div>
                     </div>
                 </div>
+                <!-- Users শীট থেকে Name/Designation/Territory না পাওয়া গেলে এই সতর্কতা
+                     দেখায় — যাতে ব্রাউজার Console না খুলেও সমস্যাটা বোঝা যায় -->
+                <div id="profile-sync-warning" style="display:none;font-size:11px;color:#c62828;background:#ffebee;border-radius:6px;padding:5px 8px;margin-top:4px;line-height:1.4;">
+                    ⚠️ Users শীট থেকে তথ্য আসছে না — Admin কে ব্যাকএন্ড রিডিপ্লয় ও Users শীটের EmpName/Territory কলাম চেক করতে বলুন।
+                </div>
             </div>
         </div>
 
@@ -3767,19 +3772,15 @@
     }
 
     /* ============================================================
-       ✅ প্রোফাইল হেডার অটো-সিঙ্ক (নতুন করে, আরও শক্তপোক্তভাবে বানানো)
+       ✅ প্রোফাইল হেডার — সহজ ও সরাসরি নিয়ম (প্রধান পথ)
        ============================================================
-       লোগোর নিচে Name/Designation/Territory — Users শীট থেকে আসা team_meta
-       অনুযায়ী লগইন হওয়ার সাথে সাথেই বসে যায়:
+       লোগোর নিচে Name/Designation/Territory এখন সরাসরি লগইন/verifyToken
+       রেসপন্স থেকে বসে — ব্যাকএন্ড ঠিক লগইন করা ইউজারের নিজের রো থেকেই
+       EmpName/Role/Territory পড়ে পাঠায় (team_meta/visibility লজিকের উপর
+       নির্ভর করে না), তাই এটাই সবচেয়ে নির্ভরযোগ্য উৎস:
          Name        <- EmpName কলাম
          Designation <- Role কলাম
-         Territory   <- Territory কলাম
-       টিম ড্যাশবোর্ড রিফ্রেশ, লগইন, টোকেন-ভেরিফাই — সব জায়গা থেকেই এই একই
-       ফাংশন কল হয়, যাতে ডাটা যেই মুহূর্তে পাওয়া যায় সাথে সাথেই হেডারে বসে।
-
-       এটা কাজ করার পূর্বশর্ত: ব্যাকএন্ডের team_meta রেসপন্সে লগইন করা ইউজারের
-       নিজের রেকর্ড (empName/role/territory সহ) থাকতে হবে — এবং Users শীটে
-       ঐ কলামগুলোতে আসলেই ডাটা বসানো থাকতে হবে (খালি কলাম হলে খালিই দেখাবে)। */
+         Territory   <- Territory কলাম */
     function setProfileHeaderField(field, value) {
         if (!value) return false;
         localStorage.setItem('app_profile_' + field, value);
@@ -3788,6 +3789,32 @@
         return true;
     }
 
+    function applyProfileFieldsFromServer(json) {
+        if (!json) return false;
+        const gotName = setProfileHeaderField('name', json.empName);
+        const gotDesg = setProfileHeaderField('desg', json.role);
+        const gotTerr = setProfileHeaderField('territory', json.territory);
+
+        const warnEl = document.getElementById('profile-sync-warning');
+        if (warnEl) warnEl.style.display = (gotName && gotDesg && gotTerr) ? 'none' : 'block';
+
+        if (!json.empName || !json.role || !json.territory) {
+            console.warn('[Profile Header] লগইন/verifyToken রেসপন্সে কিছু ফিল্ড ফাঁকা এসেছে — ' +
+                'empName: "' + (json.empName || '') + '", role: "' + (json.role || '') + '", territory: "' + (json.territory || '') + '". ' +
+                'Users শীটে এই এমপ্লয়ির রো-তে EmpName/Role/Territory কলাম পূরণ করা আছে কিনা দেখুন, ' +
+                'অথবা ব্যাকএন্ড (sc.gs) রিডিপ্লয় করা হয়েছে কিনা যাচাই করুন। পুরো রেসপন্স:', json);
+        } else {
+            console.log('[Profile Header] ✅ সার্ভার থেকে সরাসরি পাওয়া গেছে:', {empName: json.empName, role: json.role, territory: json.territory});
+        }
+        return gotName && gotDesg && gotTerr;
+    }
+
+    /* ============================================================
+       টিম-ড্যাশবোর্ডের জন্য বিকল্প পথ (team_meta-ভিত্তিক)
+       ============================================================
+       উপরের সরাসরি পথটাই যথেষ্ট হওয়া উচিত, কিন্তু টিম ড্যাশবোর্ড এমনিতেই
+       team_meta লোড করে, তাই সেখান থেকেও একটা সেকেন্ডারি রিফ্রেশ হিসেবে
+       ব্যবহার করা হয় (ক্ষতি নেই, শুধু বাড়তি নিশ্চয়তা)। */
     function findOwnTeamMetaRecord(teamMeta, authUser) {
         if (teamMeta[authUser]) return teamMeta[authUser];
         // key-তে সামান্য case/space তফাত থাকলেও (পুরনো ক্যাশড ডাটা বা ব্যাকএন্ডের
@@ -3804,25 +3831,34 @@
         const own = findOwnTeamMetaRecord(teamMeta, authUser);
 
         if (!own) {
-            console.warn('[Profile Header] team_meta-তে "' + authUser + '" এর নিজের রেকর্ড পাওয়া যায়নি। ' +
-                'কারণ হতে পারে: (১) ব্যাকএন্ড এখনো রিডিপ্লয় করা হয়নি, (২) Users শীটে এই ' +
+            console.warn('[Profile Header] ❌ team_meta-তে "' + authUser + '" এর নিজের রেকর্ড পাওয়া যায়নি — ' +
+                'তাই Name/Designation/Territory তিনটাই ফাঁকা থাকবে। কারণ হতে পারে: (১) ব্যাকএন্ড ' +
+                '(sc.gs) এখনো নতুন ভার্সন হিসেবে রিডিপ্লয় করা হয়নি, (২) Users শীটে এই ' +
                 'Username-এর রো খুঁজে পাওয়া যাচ্ছে না। বর্তমান team_meta:', teamMeta,
                 '| logged-in username:', JSON.stringify(authUser));
-        } else {
-            console.log('[Profile Header] team_meta রেকর্ড পাওয়া গেছে:', own);
+            const warnEl = document.getElementById('profile-sync-warning');
+            if (warnEl) warnEl.style.display = 'block';
+            return false;
         }
 
-        const gotName = setProfileHeaderField('name', own && own.empName);
-        // Designation: team_meta-তে own.role থাকলে সেটাই, না থাকলে লগইন রেসপন্সের
-        // role (AUTH_ROLE_KEY) ফলব্যাক হিসেবে — এভাবে team_meta না এলেও অন্তত
-        // Designation ফাঁকা থাকবে না
-        const gotDesg = setProfileHeaderField('desg', (own && own.role) || getAuthRole());
-        const gotTerr = setProfileHeaderField('territory', own && own.territory);
+        console.log('[Profile Header] ✅ team_meta রেকর্ড পাওয়া গেছে:', own);
 
-        if (own && (!own.empName || !own.territory)) {
+        // ✅ তিনটাই সরাসরি ও শুধুমাত্র Users শীটের team_meta রেকর্ড থেকে —
+        // Name <- EmpName, Designation <- Role, Territory <- Territory।
+        // কোনো fallback/মিক্সচার নেই, যাতে একটা কাজ করলে বাকিগুলোও নিশ্চিতভাবে কাজ করে,
+        // আর একটা ফাঁকা থাকলে সেটাও স্পষ্টভাবে বোঝা যায় (আগে Designation শুধু লগইন
+        // রেসপন্স থেকে ফলব্যাক হয়ে দেখাতো, যেটা বিভ্রান্তিকর ছিল)
+        const gotName = setProfileHeaderField('name', own.empName);
+        const gotDesg = setProfileHeaderField('desg', own.role);
+        const gotTerr = setProfileHeaderField('territory', own.territory);
+
+        const warnEl = document.getElementById('profile-sync-warning');
+        if (warnEl) warnEl.style.display = (gotName && gotDesg && gotTerr) ? 'none' : 'block';
+
+        if (!own.empName || !own.role || !own.territory) {
             console.warn('[Profile Header] "' + authUser + '" এর team_meta রেকর্ডে কিছু ফিল্ড খালি — ' +
-                'empName: "' + (own.empName || '') + '", territory: "' + (own.territory || '') + '". ' +
-                'Users শীটে এই এমপ্লয়ির রো-তে EmpName/Territory কলাম পূরণ করা আছে কিনা দেখুন।');
+                'empName: "' + (own.empName || '') + '", role: "' + (own.role || '') + '", territory: "' + (own.territory || '') + '". ' +
+                'Users শীটে এই এমপ্লয়ির রো-তে EmpName/Role/Territory কলাম পূরণ করা আছে কিনা দেখুন।');
         }
 
         return gotName && gotDesg && gotTerr;
@@ -7645,6 +7681,10 @@ ${territory}`;
                 localStorage.setItem(AUTH_TOKEN_KEY, json.token);
                 localStorage.setItem(AUTH_USER_KEY,  json.username);
                 localStorage.setItem(AUTH_ROLE_KEY,  json.role);
+                // ✅ সহজ সরাসরি নিয়ম: লগইন রেসপন্সেই ব্যাকএন্ড এখন ঠিক এই ইউজারের
+                // নিজের রো থেকে EmpName/District/Territory পাঠায় (কোনো team_meta/
+                // visibility লজিক ছাড়া) — তাই প্রোফাইল হেডার সাথে সাথেই সরাসরি বসিয়ে দাও
+                applyProfileFieldsFromServer(json);
                 showApp();
             } else {
                 errEl.innerText = '❌ ' + (json.message || 'Login ব্যর্থ হয়েছে।');
@@ -7689,9 +7729,11 @@ ${territory}`;
                 localStorage.setItem(AUTH_ROLE_KEY, json.role);
                 // ✅ ব্যাকএন্ড ফিক্সের পর verifyToken এখন ক্যানোনিকাল (ট্রিম করা) username-ও
                 // পাঠায় — আগের কোনো লগইনে সামান্য স্পেস/কেস তফাতসহ username সেভ হয়ে
-                // থাকলেও, এখন থেকে প্রতিবার অ্যাপ খোলার সময় এটা ঠিক হয়ে যাবে, যার ফলে
-                // team_meta-তে নিজের রেকর্ড খুঁজে পাওয়া নিশ্চিত হয়
+                // থাকলেও, এখন থেকে প্রতিবার অ্যাপ খোলার সময় এটা ঠিক হয়ে যাবে
                 if (json.username) localStorage.setItem(AUTH_USER_KEY, json.username);
+                // ✅ verifyToken রেসপন্সেও একই রো থেকে EmpName/District/Territory থাকে —
+                // তাই ক্যাশড সেশনে অ্যাপ খোলার প্রতিবারই হেডার সরাসরি রিফ্রেশ হয়
+                applyProfileFieldsFromServer(json);
                 showApp();
             } else {
                 localStorage.removeItem(AUTH_TOKEN_KEY);
