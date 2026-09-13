@@ -1633,7 +1633,19 @@
 
 <!-- ===== Login Overlay ===== -->
 <div id="login-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#1a237e,#0d47a1);z-index:999999;align-items:center;justify-content:center;flex-direction:column;">
-    <div style="background:#fff;border-radius:20px;padding:36px 28px;width:90%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.4);text-align:center;">
+
+    <!-- ✅ আগে থেকে এই ডিভাইসে লগইন করা থাকলে (cached session), ইউজারনেম/পাসওয়ার্ড
+         ফর্ম না দেখিয়ে এই হালকা লোডিং স্পিনার দেখানো হয়, যতক্ষণ না Firebase
+         ব্যাকগ্রাউন্ডে সেশন যাচাই করে সরাসরি অ্যাপ খুলে দেয়। এতে প্রতিবার
+         রিফ্রেশে বিরক্তিকরভাবে লগইন ফর্ম দেখাতে হয় না। -->
+    <div id="login-loading-state" style="display:none;text-align:center;color:#fff;">
+        <div style="font-size:48px;margin-bottom:14px;">🏭</div>
+        <div style="width:38px;height:38px;border:4px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;margin:0 auto 16px;animation:loginSpin 0.8s linear infinite;"></div>
+        <p style="font-size:14px;opacity:0.9;">লোড হচ্ছে...</p>
+    </div>
+    <style>@keyframes loginSpin { to { transform: rotate(360deg); } }</style>
+
+    <div id="login-card-wrapper" style="background:#fff;border-radius:20px;padding:36px 28px;width:90%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.4);text-align:center;">
         <div style="font-size:48px;margin-bottom:8px;">🏭</div>
         <h2 style="color:#1a237e;margin:0 0 4px;font-size:20px;">সিমেন্ট ডিস্ট্রিবিউশন</h2>
         <p style="color:#888;font-size:13px;margin:0 0 24px;">আপনার account-এ login করুন</p>
@@ -3237,8 +3249,27 @@
         <div id="retailer-order-subpage" class="subpage">
             <div class="list-card" id="retailer-order-list-card">
                 <div class="list-header-wrapper">
-                    <h3>🧾 <span id="lan-ro-title">রিটেইল অর্ডার</span></h3>
+                    <h3>🧾 <span id="lan-ro-title">রিটেইল অর্ডার</span> <span id="ro-header-total" style="font-size:12px; color:#1565c0; font-weight:bold;"></span></h3>
                     <button class="action-header-btn" id="lan-btn-ro-toggle" onclick="toggleForm('retailer-order-form-section', this, 'btnROToggle', 'btnROToggleClose')">➕ নতুন অর্ডার এন্ট্রি</button>
+                </div>
+
+                <!-- Date Range + Retailer Filter — Delivery Chalan হিস্ট্রির মতোই -->
+                <div class="filter-row" id="ro-hist-filter-row">
+                    <div class="filter-group">
+                        <label class="lan-lbl-start-date">শুরুর তারিখ:</label>
+                        <input type="date" id="ro-hist-start-date" onchange="updateApp()">
+                    </div>
+                    <div class="filter-group">
+                        <label class="lan-lbl-end-date">শেষের তারিখ:</label>
+                        <input type="date" id="ro-hist-end-date" onchange="updateApp()">
+                    </div>
+                    <div class="filter-group">
+                        <label class="lan-lbl-retailer-filter">রিটেইলার:</label>
+                        <select id="ro-hist-retailer-filter" onchange="updateApp()">
+                            <option value="">সব রিটেইলার</option>
+                        </select>
+                    </div>
+                    <button class="filter-clear-btn" onclick="document.getElementById('ro-hist-retailer-filter').value=''; clearDateFilter('ro-hist-start-date', 'ro-hist-end-date');">🧹 Clear</button>
                 </div>
 
                 <div class="form-card" id="retailer-order-form-section" style="display: none; border: 1px solid #2e7d32; background: #fafafa;">
@@ -7515,6 +7546,21 @@
         sel.innerHTML = html;
         sel.value = current;
     }
+    // ✅ Retail Order টেবিলের উপরে থাকা "রিটেইলার" ফিল্টার ড্রপডাউন — একই প্যাটার্নে
+    function populateRoHistRetailerFilter() {
+        const sel = document.getElementById('ro-hist-retailer-filter');
+        if (!sel) return;
+        const current = sel.value || '';
+        const retailers = getRetailers();
+        const allLabel = currentLang === 'bn' ? 'সব রিটেইলার' : 'All Retailers';
+        let html = '<option value="">' + allLabel + '</option>';
+        html += retailers.map(function(r) {
+            const s = (r.name === current) ? ' selected' : '';
+            return '<option value="' + String(r.name).replace(/"/g, '&quot;') + '"' + s + '>' + escHtml(r.name) + '</option>';
+        }).join('');
+        sel.innerHTML = html;
+        sel.value = current;
+    }
 
     /* ============================================================
        ✅ Dealer ট্যাব > "Gift Hisab" সাব-ট্যাব: ডেলিভারি চালান থেকে শুধু
@@ -7703,8 +7749,31 @@
         const table = document.getElementById('retailer-order-table');
         if (!table) return;
         table.innerHTML = '';
-        const orders = getRetailOrders();
-        orders.forEach(function(o, idx) {
+        const allOrders = getRetailOrders();
+
+        // ✅ তারিখ যেভাবেই ইনপুট দেওয়া হোক না কেন, তালিকা সবসময় তারিখ অনুযায়ী
+        // ক্রমানুসারে (আগে-পরে) সাজানো থাকবে — একই তারিখে একাধিক এন্ট্রি থাকলে
+        // যে আগে যোগ করা হয়েছে সেটাই আগে দেখাবে
+        const orders = allOrders.slice().sort(function(a, b) {
+            const da = a.orderDate || '';
+            const db = b.orderDate || '';
+            if (da !== db) return da < db ? -1 : 1;
+            return String(a.id).localeCompare(String(b.id));
+        });
+
+        // ✅ Delivery Chalan হিস্ট্রির মতোই — ডেট রেঞ্জ ও রিটেইলার ফিল্টার
+        const roStartDateFilter = (document.getElementById('ro-hist-start-date') || {}).value || '';
+        const roEndDateFilter = (document.getElementById('ro-hist-end-date') || {}).value || '';
+        const roRetailerFilterEl = document.getElementById('ro-hist-retailer-filter');
+        const roRetailerFilterVal = roRetailerFilterEl ? roRetailerFilterEl.value : '';
+        const ordersForTable = orders.filter(function(o) {
+            if (roStartDateFilter && o.orderDate < roStartDateFilter) return false;
+            if (roEndDateFilter && o.orderDate > roEndDateFilter) return false;
+            if (roRetailerFilterVal && o.shopName !== roRetailerFilterVal) return false;
+            return true;
+        });
+
+        ordersForTable.forEach(function(o, idx) {
             table.insertAdjacentHTML('beforeend',
                 '<tr' + bulkRowIdAttr(o.id) + '>' +
                 '<td>' + bulkCb(o.id) + convertToLangNum(idx + 1) + '</td>' +
@@ -7720,6 +7789,18 @@
                 '</tr>'
             );
         });
+
+        // হেডিং-এর পাশে সাব-টোটাল ব্যাজ — ডেট রেঞ্জ/রিটেইলার ফিল্টার করা থাকলে সেই
+        // অনুযায়ী, নাহলে সব অর্ডারের মোট Qty
+        const hasRoRange = !!(roStartDateFilter || roEndDateFilter || roRetailerFilterVal);
+        const roRangeTotalQty = ordersForTable.reduce(function(s, o) { return s + (parseFloat(o.qty) || 0); }, 0);
+        const roHeaderTotalEl = document.getElementById('ro-header-total');
+        if (roHeaderTotalEl) {
+            const roRangeLabel = hasRoRange
+                ? (currentLang === 'bn' ? '(রেঞ্জের মোট: ' : '(Range Total: ')
+                : (currentLang === 'bn' ? '(সর্বমোট: ' : '(Grand Total: ');
+            roHeaderTotalEl.innerText = roRangeLabel + convertToLangNum(roRangeTotalQty) + (currentLang === 'bn' ? ')' : ')');
+        }
     }
 
     function addMason() {
@@ -8398,13 +8479,21 @@ ${territory}`;
             { label:'ট্রাক নম্বর', id:'e_truck', type:'text', val: d.truck||'' },
             { label:'ড্রাইভার নাম', id:'e_driverName', type:'text', val: d.driverName||'' },
             { label:'ড্রাইভার মোবাইল', id:'e_driverMobile', type:'text', val: d.driverMobile||'' },
+            { label:'স্ট্যাটাস', id:'e_status', type:'select', val: d.status || 'Not Submitted', options:[
+                {v:'Not Submitted', l:'Not Submitted'},
+                {v:'Submitted', l:'Submitted'},
+                {v:'Pending', l:'Pending'},
+                {v:'Approved', l:'Approved'},
+                {v:'Rejected', l:'Rejected'}
+            ] },
             editDealerField(d.dealerName)
         ], function(vals) {
             const updated = deliveries.map(x => x.id === id ? Object.assign({}, x, {
                 date: vals.e_date, bags: parseInt(vals.e_bags)||0, price: parseFloat(vals.e_price)||0,
                 buyerName: vals.e_buyerName, point: vals.e_point, saleType: vals.e_saleType,
                 counterCustomer: vals.e_counterCustomer, truck: vals.e_truck,
-                driverName: vals.e_driverName, driverMobile: vals.e_driverMobile, dealerName: vals['edit-dealer-select']
+                driverName: vals.e_driverName, driverMobile: vals.e_driverMobile, dealerName: vals['edit-dealer-select'],
+                status: vals.e_status
             }) : x);
             updated.sort((a,b) => (a.date||'') < (b.date||'') ? -1 : (a.date||'') > (b.date||'') ? 1 : 0);
             localStorage.setItem('deliveries', JSON.stringify(updated));
@@ -9602,6 +9691,12 @@ ${territory}`;
         const overlay = document.getElementById('login-overlay');
         overlay.style.display = 'flex';
         overlay.style.visibility = 'visible';
+        // ✅ আগে cached-session চেক করার সময় লগইন কার্ড লুকানো/স্পিনার দেখানো থাকলে,
+        // এখন যেহেতু সত্যিই লগইন করা নেই, ফর্মটা আবার দেখাও
+        const loadingEl = document.getElementById('login-loading-state');
+        const cardEl = document.getElementById('login-card-wrapper');
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (cardEl) cardEl.style.display = 'block';
         document.getElementById('app-main-wrapper').style.display = 'none';
         document.getElementById('login-error').innerText = '';
         document.getElementById('login-username').value = '';
@@ -9852,9 +9947,29 @@ ${territory}`;
        যতক্ষণ না ইউজার নিজে Logout করছেন, ততক্ষণ এই সেশন বৈধ ধরে নেওয়া হয়।
        (আসল যাচাই শুধু doLogin()-এই হয়, প্রথমবার লগইন করার সময়।) */
     function checkAuthOnLoad() {
+        // ✅ এই ডিভাইসে আগে থেকেই লগইন করা থাকলে (cached token), ইউজারনেম/পাসওয়ার্ড
+        // ফর্ম না দেখিয়ে একটা হালকা স্পিনার দেখাও — Firebase ব্যাকগ্রাউন্ডে সেশন
+        // (LOCAL persistence) যাচাই করে সরাসরি অ্যাপ খুলে দেবে, যতক্ষণ না ইউজার
+        // নিজে Logout করছেন ততক্ষণ আর কখনো ফর্ম দেখাতে হবে না।
+        let authResolved = false;
+        const cachedToken = localStorage.getItem(AUTH_TOKEN_KEY);
+        if (cachedToken) {
+            const overlay = document.getElementById('login-overlay');
+            const loadingEl = document.getElementById('login-loading-state');
+            const cardEl = document.getElementById('login-card-wrapper');
+            if (overlay) { overlay.style.display = 'flex'; overlay.style.visibility = 'visible'; }
+            if (cardEl) cardEl.style.display = 'none';
+            if (loadingEl) loadingEl.style.display = 'block';
+            // নেটওয়ার্ক সমস্যায় Firebase দীর্ঘক্ষণ সাড়া না দিলে (৮ সেকেন্ড) যেন
+            // স্পিনারে চিরস্থায়ীভাবে আটকে না থাকে — তখন লগইন ফর্ম দেখানো হবে
+            setTimeout(function() {
+                if (!authResolved) showLoginScreen();
+            }, 8000);
+        }
         // Firebase নিজেই ব্রাউজারে সেশন মনে রাখে (LOCAL persistence), তাই পেজ
         // রিফ্রেশ/রিওপেন হলে onAuthStateChanged একটু পরেই আগের ইউজার ফিরিয়ে দেয়।
         fbAuth.onAuthStateChanged(async function(user) {
+            authResolved = true;
             if (!user) { showLoginScreen(); return; }
             localStorage.setItem(AUTH_TOKEN_KEY, user.uid);
             try {
@@ -13034,6 +13149,7 @@ ${territory}`;
         populateAllDealerSelects();
         populateAllRetailerSelects();
         populateDelHistRetailerFilter();
+        populateRoHistRetailerFilter();
         populateGiftHisabRetailerFilter();
         renderGiftHisabTable();
         renderRetailOrderTable();
